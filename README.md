@@ -1,59 +1,28 @@
-# scala-oauth2-provider example with Skinny-ORM
+# 基于Akka统一认证授权服务
 
-- [scala-oauth2-provider](https://github.com/nulab/scala-oauth2-provider) 1.3.x
-- [Akka Framework](https://akka.io/) 2.5.x
-- [Skinny-ORM](http://skinny-framework.org/documentation/orm.html) 2.3.x
-
-## Running Akka Framework with evolutions
+## 创建用户
 
 ```
-$ sbt run
+post localhost:9000/api/account
+{
+	"username": "galudisu",
+	"password": "$ea(oo2!f",
+	"salt": "ejOpaakl108",
+	"email": "galudisu@gmail.com"
+}
 ```
 
-## Try to create access tokens using curl
+## 申请客户端
 
-### Client credentials
-
-```
-$ curl http://localhost:9000/oauth/access_token -X POST -d "client_id=bob_client_id" -d "client_secret=bob_client_secret" -d "grant_type=client_credentials"
-```
-
-### Authorization code
+1. 申请者Id，必须在account中有记录
+2. 申请者Id，需要是开发者角色(此处不验证)
+3. 申请者Id，拥有相关权限资格(此处不验证)
+4. 申请的网站回调地址
 
 ```
-$ curl http://localhost:9000/oauth/access_token -X POST -d "client_id=alice_client_id" -d "client_secret=alice_client_secret" -d "redirect_uri=http://localhost:3000/callback" -d "code=bob_code" -d "grant_type=authorization_code"
-```
-
-NOTE: A service needs to generate `code` in advance. In this example, the code has been inserted in database by evolutions.
-
-### Password
-
-```
-$ curl http://localhost:9000/oauth/access_token -X POST -d "client_id=alice_client_id2" -d "client_secret=alice_client_secret2" -d "username=alice@example.com" -d "password=alice" -d "grant_type=password"
-```
-
-### Refresh token
-
-```
-$ curl http://localhost:9000/oauth/access_token -X POST -d "client_id=alice_client_id2" -d "client_secret=alice_client_secret2" -d "refresh_token=${refresh_token}" -d "grant_type=refresh_token"
-```
-
-NOTE: `${refresh_token}` is you got `refresh_token` from json of password grant. (client_id and client_secret are also same with password grant)
-
-### Access resource using access_token
-
-You can access application resource using access token.
-
-```
-$ curl --dump-header - -H "Authorization: Bearer ${access_token}" http://localhost:9000/resources
-```
-
-In this example, server just returns authorized user information.
-
-```
-HTTP/1.1 200 OK
-Content-Type: application/json; charset=utf-8
-Content-Length: 90
-
-{"account":{"email":"alice@example.com"},"clientId":"alice_client_id2","redirectUri":null}
+post localhost:9000/api/client
+{
+    "account_id": "galudisu",
+    "redirect_uri": "http://localhost:3000/callback"
+}
 ```

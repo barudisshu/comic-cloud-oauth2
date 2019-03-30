@@ -29,7 +29,6 @@ class AccountEntity(val repo: AccountsRepository) extends PersistentEntity[Accou
   override def additionalCommandHandling: Receive = {
     case o: CreateAccountCommand =>
       // Kick off the validation process
-      val validator = context.actorOf(AccountCreateValidator.props(repo))
       validator.forward(o)
       state = ValidationFO.validation
 

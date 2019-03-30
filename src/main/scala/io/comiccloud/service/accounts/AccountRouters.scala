@@ -30,7 +30,7 @@ object AccountRouters {
 class AccountRouters(accountRef: ActorRef)(implicit val ec: ExecutionContext) extends BasicRoutesDefinition {
   override def routes(implicit system: ActorSystem, ec: ExecutionContext, mater: Materializer): Route = {
     logRequestResult("server") {
-      (post & path("account")) {
+      (put & path("account")) {
         entity(as[CreateAccountRequest]) { request =>
           val id = UUID.randomUUID().toString
           val vo = AccountFO(

@@ -12,6 +12,7 @@ trait AccountFactory extends EntityFactory {
 
   def repo: AccountsRepository
 
+  def validator: ActorRef = context.actorOf(AccountCreateValidator.props(repo))
   def creation: ActorRef = context.actorOf(AccountCreation.props(repo))
   def finding: ActorRef = context.actorOf(AccountFindingById.props(repo))
 }
