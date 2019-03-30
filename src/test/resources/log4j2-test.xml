@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="OFF" monitorInterval="1800">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <ThresholdFilter level="TRACE" onMatch="ACCEPT"/>
+            <PatternLayout pattern="[%-5level %date{HH:mm:ss.SSS}] %msg%n%throwable"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <logger name="akka" level="DEBUG"/>
+        <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>
+        <logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG"/>
+        <logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>
+        <logger name="io.comiccloud" level="DEBUG"/>
+        <Root level="INFO">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

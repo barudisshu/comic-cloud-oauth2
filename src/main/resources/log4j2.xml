@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="OFF" monitorInterval="1800">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <ThresholdFilter level="TRACE" onMatch="ACCEPT"/>
+            <PatternLayout pattern="%highlight{[%-5level %date{HH:mm:ss.SSS}] %msg%n%throwable}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <logger name="akka" level="DEBUG"/>
+        <logger name="slick" level="INFO"/>
+        <logger name="io.comiccloud" level="DEBUG"/>
+        <Root level="INFO">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>

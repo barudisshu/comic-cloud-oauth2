@@ -1,0 +1,10 @@
+# IntelliJ
+.idea/
+*.iml
+
+# SBT
+target/
+
+#Scala
+
+*.sc
