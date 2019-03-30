@@ -1,4 +1,4 @@
-package io.comiccloud.servcie.accounts
+package io.comiccloud.service.accounts
 
 import akka.actor.Props
 import io.comiccloud.aggregate.Aggregate

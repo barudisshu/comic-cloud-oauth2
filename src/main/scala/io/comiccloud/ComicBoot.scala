@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import io.comiccloud.config.DbConfiguration
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest.{BasicRoutesDefinition, Bootstrap}
-import io.comiccloud.servcie.accounts.{AccountAssociate, AccountRouters}
+import io.comiccloud.service.accounts.{AccountAssociate, AccountRouters}
 
 class ComicBoot extends Bootstrap with DbConfiguration {
   override def bootup(system: ActorSystem): List[BasicRoutesDefinition] = {

@@ -6,7 +6,7 @@ import akka.actor._
 import io.comiccloud.entity._
 import io.comiccloud.repository._
 import io.comiccloud.rest._
-import io.comiccloud.servcie.accounts.AccountAssociate
+import io.comiccloud.service.accounts.AccountAssociate
 
 import scala.concurrent.duration._
 import scala.language.postfixOps

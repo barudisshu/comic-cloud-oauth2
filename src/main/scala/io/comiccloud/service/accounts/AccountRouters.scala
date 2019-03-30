@@ -1,4 +1,4 @@
-package io.comiccloud.servcie.accounts
+package io.comiccloud.service.accounts
 
 import java.util.UUID
 
@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import io.comiccloud.event.accounts.{AccountFO, CreateAccountCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
-import io.comiccloud.servcie.accounts.AccountRouters.CreateAccountRequest
+import AccountRouters.CreateAccountRequest
 import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
