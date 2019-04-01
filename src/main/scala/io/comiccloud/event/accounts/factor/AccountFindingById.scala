@@ -1,6 +1,7 @@
-package io.comiccloud.event.accounts
+package io.comiccloud.event.accounts.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import io.comiccloud.event.accounts.{AccountFO, FindAccountByIdCommand}
 import io.comiccloud.models.Account
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest.{EmptyResult, FullResult}

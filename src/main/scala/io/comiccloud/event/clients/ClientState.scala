@@ -35,6 +35,15 @@ case class ClientFO(id: String,
   override def markDeleted: ClientState = this
 }
 
+object ValidationFO {
+  def validation = ValidationFO("")
+}
+
+case class ValidationFO(id: String, deleted: Boolean = false) extends ClientState {
+  override def assignId(id: String): ClientState = this.copy(id)
+  override def markDeleted: ClientState = this
+}
+
 object CreateClientFO {
   implicit val format: RootJsonFormat[CreateClientFO] = jsonFormat5(CreateClientFO.apply)
 }

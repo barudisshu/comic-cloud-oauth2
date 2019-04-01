@@ -43,10 +43,10 @@ class AccountEntity(val repo: AccountsRepository) extends PersistentEntity[Accou
     // ========================================================================
 
     case cmd: FindAccountByIdCommand =>
-      finding.forward(cmd)
+      findingById.forward(cmd)
 
     case CreateAccount(cmd) =>
-      creation.forward(cmd)
+      creator.forward(cmd)
   }
 
   override def isCreateMessage(cmd: Any): Boolean = cmd match {

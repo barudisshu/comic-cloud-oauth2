@@ -1,7 +1,8 @@
-package io.comiccloud.event.accounts
+package io.comiccloud.event.accounts.factor
 
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.event.accounts.AccountEntity.CreateValidatedAccount
+import io.comiccloud.event.accounts.{AccountFO, AccountFactory, CreateAccountCommand, FindAccountByIdCommand}
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest._
 
@@ -47,7 +48,7 @@ private[accounts] class AccountCreateValidator(val repo: AccountsRepository) ext
 
   when(WaitingForRequest) {
     case Event(request: CreateAccountCommand, _) =>
-      finding ! FindAccountByIdCommand(request.entityId)
+      findingById ! FindAccountByIdCommand(request.entityId)
       goto(LookingUpEntities) using ResolvedDependencies(Inputs(sender(), request))
   }
 
@@ -60,7 +61,7 @@ private[accounts] class AccountCreateValidator(val repo: AccountsRepository) ext
       stay using data
   } using {
     case FSM.State(state, ResolvedDependencies(inputs), _, _, _) =>
-      creation ! inputs.request
+      creator ! inputs.request
       goto(InsertDb) using LookedUpData(inputs, inputs.request.vo)
   })
 

@@ -31,6 +31,9 @@ class ClientsRepository(val config: DatabaseConfig[JdbcProfile])(implicit ec: Ex
     db.run((for (client <- clients if client.clientId ===
       clientId) yield client).result.headOption)
 
+  def findByAccountUid(accountId: String): Future[Seq[Client]] =
+    db.run((for (client <- clients if client.ownerId === accountId) yield client).result)
+
   def findAll(): Future[Seq[Client]] =
     db.run(clients.result)
 

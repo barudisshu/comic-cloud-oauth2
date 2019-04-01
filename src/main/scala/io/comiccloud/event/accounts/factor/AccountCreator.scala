@@ -1,15 +1,16 @@
-package io.comiccloud.event.accounts
+package io.comiccloud.event.accounts.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import io.comiccloud.event.accounts.{AccountFO, CreateAccountCommand}
 import io.comiccloud.models.Account
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest._
 
-object AccountCreation {
-  def props(repo: AccountsRepository): Props = Props(new AccountCreation(repo))
+object AccountCreator {
+  def props(repo: AccountsRepository): Props = Props(new AccountCreator(repo))
 }
 
-class AccountCreation(repo: AccountsRepository) extends Actor with ActorLogging {
+class AccountCreator(repo: AccountsRepository) extends Actor with ActorLogging {
 
   import akka.pattern.pipe
   import context.dispatcher

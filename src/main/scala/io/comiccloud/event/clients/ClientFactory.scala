@@ -9,6 +9,7 @@ trait ClientFactory extends EntityFactory {
 
   def repo: ClientsRepository
 
-  def creation: ActorRef = context.actorOf(ClientCreation.props(repo))
-  def validation: ActorRef = context.actorOf(ClientValidation.props(repo))
+  def creator: ActorRef = context.actorOf(ClientCreator.props(repo))
+  def validator: ActorRef = context.actorOf(ClientCreateValidator.props(repo))
+  def findingByAccountId: ActorRef = context.actorOf(ClientFindingByAccountId.props(repo))
 }
