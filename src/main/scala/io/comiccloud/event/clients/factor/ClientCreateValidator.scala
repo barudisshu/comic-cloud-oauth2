@@ -3,14 +3,15 @@ package io.comiccloud.event.clients.factor
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.event.clients.ClientEntity.CreateValidatedClient
 import io.comiccloud.event.clients._
-import io.comiccloud.repository.ClientsRepository
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 private[clients] object ClientCreateValidator {
-  def props(repo: ClientsRepository): Props = Props(new ClientCreateValidator(repo))
+  def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
+    Props(new ClientCreateValidator(clientsRepo, accountsRepo))
 
   sealed trait State
   case object WaitingForRequest extends State
@@ -37,11 +38,14 @@ private[clients] object ClientCreateValidator {
   case class LookedUpData(inputs: Inputs, client: ClientFO) extends InputsData
 
   val InvalidClientIdError = ErrorMessage("client.invalid.clientId", Some("You have supplied an invalid client id"))
-  val RejectedClientError = ErrorMessage("client.invalid.rejected", Some("The user does not exists"))
+  val RejectedClientError  = ErrorMessage("client.invalid.rejected", Some("The user does not exists"))
 
 }
 
-private[clients] class ClientCreateValidator(val repo: ClientsRepository) extends FSM[ClientCreateValidator.State, ClientCreateValidator.Data] with ClientFactory {
+private[clients] class ClientCreateValidator(
+                                              val clientsRepo: ClientsRepository,
+                                              val accountsRepo: AccountsRepository) extends FSM[ClientCreateValidator
+.State, ClientCreateValidator.Data] with ClientFactory {
 
   import ClientCreateValidator._
 
@@ -53,7 +57,7 @@ private[clients] class ClientCreateValidator(val repo: ClientsRepository) extend
       goto(ClientHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
-  when(ClientHasRespondedAccount, 5 seconds)(transform{
+  when(ClientHasRespondedAccount, 5 seconds)(transform {
     case Event(FullResult(_), data: ResolvedDependencies) =>
       stay using data
     case Event(EmptyResult, data: ResolvedDependencies) =>

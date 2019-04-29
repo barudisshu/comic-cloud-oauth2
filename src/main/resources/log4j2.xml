@@ -8,7 +8,9 @@
     </Appenders>
     <Loggers>
         <logger name="akka" level="DEBUG"/>
-        <logger name="slick" level="INFO"/>
+        <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>
+        <logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG"/>
+        <logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>
         <logger name="io.comiccloud" level="DEBUG"/>
         <Root level="INFO">
             <AppenderRef ref="STDOUT"/>

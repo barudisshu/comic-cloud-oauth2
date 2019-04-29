@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import io.comiccloud.digest.Hashes
-import io.comiccloud.event.clients.{ClientFO, CreateClientCommand, CreateClientFO}
+import io.comiccloud.event.clients.{ClientFO, CreateClientCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.clients.ClientRouters.CreateClientRequest

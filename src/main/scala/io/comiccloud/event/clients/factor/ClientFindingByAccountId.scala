@@ -1,16 +1,19 @@
 package io.comiccloud.event.clients.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import io.comiccloud.event.clients.{ClientFO, FindClientByAccountIdCommand}
-import io.comiccloud.models.Client
-import io.comiccloud.repository.ClientsRepository
+import io.comiccloud.event.accounts.AccountFO
+import io.comiccloud.event.clients.FindClientByAccountIdCommand
+import io.comiccloud.models.Account
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest.{EmptyResult, FullResult}
 
 private[clients] object ClientFindingByAccountId {
-  def props(repo: ClientsRepository): Props = Props(new ClientFindingByAccountId(repo))
+  def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
+    Props(new ClientFindingByAccountId(clientsRepo, accountsRepo))
 }
 
-private[clients] class ClientFindingByAccountId(repo: ClientsRepository) extends Actor with ActorLogging {
+private[clients] class ClientFindingByAccountId(clientsRepo: ClientsRepository,
+                                                accountsRepo: AccountsRepository) extends Actor with ActorLogging {
 
   import akka.pattern.pipe
   import context.dispatcher
@@ -18,22 +21,19 @@ private[clients] class ClientFindingByAccountId(repo: ClientsRepository) extends
   override def receive: Receive = {
     case FindClientByAccountIdCommand(accountId) =>
       context become findByAccountUid(sender)
-      repo.findByAccountUid(accountId) pipeTo self
+      accountsRepo.findByUid(accountId) pipeTo self
   }
-
   def findByAccountUid(replyTo: ActorRef): Receive = {
-    case clients: Seq[Client @unchecked] =>
-      val clientFOs = clients.map(client =>
-        ClientFO(
-           id = client.clientId,
-          ownerId = client.clientId,
-          clientId = client.clientId,
-          clientSecret = client.clientSecret,
-          redirectUri = client.redirectUri,
-          createdAt = client.createdAt
-        )
-      )
-      replyTo ! FullResult(clientFOs)
+    case Some(account: Account) =>
+      val accountFO = AccountFO(
+        id = account.uid,
+        username = account.username,
+        password = account.password,
+        salt = account.salt,
+        email = account.email,
+        phone = account.phone,
+        createdAt = account.createdAt)
+      replyTo ! FullResult(accountFO)
       self ! PoisonPill
 
     case f: akka.actor.Status.Failure =>
@@ -42,6 +42,5 @@ private[clients] class ClientFindingByAccountId(repo: ClientsRepository) extends
     case None =>
       replyTo ! EmptyResult
       context stop self
-
   }
 }

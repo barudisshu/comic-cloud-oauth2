@@ -2,18 +2,21 @@ package io.comiccloud.event.clients
 
 import akka.actor.Props
 import io.comiccloud.entity.{EntityEvent, PersistentEntity}
-import io.comiccloud.repository.ClientsRepository
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 
 object ClientEntity {
   val Name = "client"
 
-  def props(repo: ClientsRepository): Props = Props(new ClientEntity(repo))
+  def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
+    Props(new ClientEntity(clientsRepo, accountsRepo))
 
   case class CreateClient(ccc: CreateClientCommand)
   case class CreateValidatedClient(ccv: CreateClientCommand)
 }
 
-class ClientEntity(val repo: ClientsRepository) extends PersistentEntity[ClientState] with ClientFactory {
+class ClientEntity(val clientsRepo: ClientsRepository,
+                   val accountsRepo: AccountsRepository) extends PersistentEntity[ClientState] with ClientFactory {
+
   import ClientEntity._
 
   override def initialState: ClientState = ClientInitialState.empty

@@ -15,7 +15,7 @@ class ComicBoot extends Bootstrap with DbConfiguration {
     val accountRef = system.actorOf(AccountAssociate.props(accountRepo), AccountAssociate.Name)
 
     val clientRepo = new ClientsRepository(config)
-    val clientRef = system.actorOf(ClientAssociate.props(clientRepo), ClientAssociate.Name)
+    val clientRef = system.actorOf(ClientAssociate.props(clientRepo, accountRepo), ClientAssociate.Name)
 
     List(new AccountRouters(accountRef), new ClientRouters(clientRef))
   }
