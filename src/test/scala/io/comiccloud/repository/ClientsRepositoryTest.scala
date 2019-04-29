@@ -38,7 +38,6 @@ class ClientsRepositoryTest(implicit ee: ExecutionEnv) extends Specification
       Client(
         id = None,
         ownerId = "ownerId",
-        grantType = "authorization_code",
         clientId = "client_id",
         clientSecret = "client_secret",
         redirectUri = Some("redirect_uri"),

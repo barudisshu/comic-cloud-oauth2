@@ -2,6 +2,7 @@ package io.comiccloud.event.clients
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import io.comiccloud.entity.EntityFactory
+import io.comiccloud.event.clients.factor._
 import io.comiccloud.repository.ClientsRepository
 
 trait ClientFactory extends EntityFactory {

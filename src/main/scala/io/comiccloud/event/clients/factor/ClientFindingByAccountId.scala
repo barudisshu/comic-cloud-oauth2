@@ -22,12 +22,11 @@ private[clients] class ClientFindingByAccountId(repo: ClientsRepository) extends
   }
 
   def findByAccountUid(replyTo: ActorRef): Receive = {
-    case clients: Seq[Client] =>
+    case clients: Seq[Client @unchecked] =>
       val clientFOs = clients.map(client =>
         ClientFO(
            id = client.clientId,
           ownerId = client.clientId,
-          grantType = client.grantType,
           clientId = client.clientId,
           clientSecret = client.clientSecret,
           redirectUri = client.redirectUri,

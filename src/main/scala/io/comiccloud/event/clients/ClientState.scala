@@ -19,13 +19,12 @@ case class ClientInitialState(id: String, deleted: Boolean = false) extends Clie
 }
 
 object ClientFO {
-  def empty = ClientFO("", "", "", "", "", None)
-  implicit val format: RootJsonFormat[ClientFO] = jsonFormat8(ClientFO.apply)
+  def empty = ClientFO("", "", "", "", None)
+  implicit val format: RootJsonFormat[ClientFO] = jsonFormat7(ClientFO.apply)
 }
 
 case class ClientFO(id: String,
                     ownerId: String,
-                    grantType: String,
                     clientId: String,
                     clientSecret: String,
                     redirectUri: Option[String],

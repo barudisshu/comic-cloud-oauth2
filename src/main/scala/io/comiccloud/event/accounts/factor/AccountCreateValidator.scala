@@ -69,10 +69,10 @@ private[accounts] class AccountCreateValidator(val repo: AccountsRepository) ext
     case Event(FullResult(txn: AccountFO), data: LookedUpData) =>
       context.parent.tell(CreateValidatedAccount(data.inputs.request), data.inputs.originator)
       stop
-    case Event(failure, data: LookedUpData) =>
+    case Event(failure: Failure, data: LookedUpData) =>
       data.originator ! failure
       stop
-    case Event(empty, data: LookedUpData) =>
+    case Event(empty: Empty, data: LookedUpData) =>
       data.originator ! empty
       stop
   }

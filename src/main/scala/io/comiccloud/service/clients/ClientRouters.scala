@@ -1,10 +1,12 @@
 package io.comiccloud.service.clients
+
 import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import io.comiccloud.digest.Hashes
 import io.comiccloud.event.clients.{ClientFO, CreateClientCommand, CreateClientFO}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
@@ -29,10 +31,12 @@ class ClientRouters(clientRef: ActorRef)(implicit val ec: ExecutionContext) exte
       (put & path("client")) {
         entity(as[CreateClientRequest]) { request =>
           val id = UUID.randomUUID().toString
-          val vo = CreateClientFO(
-            id,
-            request.accountId,
-            request.redirectUri
+          val vo = ClientFO(
+            id = id,
+            ownerId = request.accountId,
+            clientId = Hashes.randomSha1().toString,
+            clientSecret = Hashes.randomSha1().toString,
+            redirectUri = request.redirectUri
           )
           val command = CreateClientCommand(vo)
           serviceAndComplete[ClientFO](command, clientRef)

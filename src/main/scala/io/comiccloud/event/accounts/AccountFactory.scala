@@ -2,6 +2,7 @@ package io.comiccloud.event.accounts
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import io.comiccloud.entity.EntityFactory
+import io.comiccloud.event.accounts.factor._
 import io.comiccloud.repository.AccountsRepository
 
 /**
