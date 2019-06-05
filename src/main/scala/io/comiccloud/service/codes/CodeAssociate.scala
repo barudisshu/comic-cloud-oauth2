@@ -17,7 +17,9 @@ class CodeAssociate(clientsRepo: ClientsRepository, accountsRepo: AccountsReposi
   override def receive: Receive = {
     case command: CreateCodeCommand =>
       forwardCommand(command)
-    case command: FindCodeByAccountIdCommand =>
+    case command: FindCodeRelateAccountIdCommand =>
+      forwardCommand(command)
+    case command: FindCodeRelateClientIdCommand =>
       forwardCommand(command)
     case command: FindCodeByClientIdCommand =>
       forwardCommand(command)

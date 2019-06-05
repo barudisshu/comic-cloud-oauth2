@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import io.comiccloud.digest.Hashes
-import io.comiccloud.event.codes.{CodeFO, CreateCodeCommand}
+import io.comiccloud.event.codes.{CodeFO, CreateCodeCommand, FindCodeByClientIdCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.codes.CodeRouters.CreateCodeRequest
@@ -28,17 +28,23 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
   override def routes(implicit system: ActorSystem, ec: ExecutionContext,
                       mater: Materializer): Route = {
     logRequest("server") {
-      (put & path("code")) {
-        entity(as[CreateCodeRequest]) {request =>
-          val id = UUID.randomUUID().toString
-          val vo = CodeFO(
-            id = id,
-            accountUid = request.accountId,
-            clientUid = request.clientId,
-            code = Hashes.randomHexString(5),
-            redirectUri = request.redirectUri
-          )
-          val command = CreateCodeCommand(vo)
+      pathPrefix("code") {
+        put {
+          entity(as[CreateCodeRequest]) { request =>
+            val id = UUID.randomUUID().toString
+            val vo = CodeFO(
+              id = id,
+              accountUid = request.accountId,
+              clientUid = request.clientId,
+              code = Hashes.randomHexString(5),
+              redirectUri = request.redirectUri
+            )
+            val command = CreateCodeCommand(vo)
+            serviceAndComplete[CodeFO](command, codeRef)
+          }
+        } ~
+        (get & parameters('clientId)) { clientId =>
+          val command = FindCodeByClientIdCommand(clientId)
           serviceAndComplete[CodeFO](command, codeRef)
         }
       }

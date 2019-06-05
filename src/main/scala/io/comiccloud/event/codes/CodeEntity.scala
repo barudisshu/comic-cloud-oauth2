@@ -1,8 +1,11 @@
 package io.comiccloud.event.codes
 
-import akka.actor.Props
+import akka.actor.{PoisonPill, Props}
+import akka.cluster.sharding.ShardRegion.Passivate
+import io.comiccloud.entity.PersistentEntity.StopEntity
 import io.comiccloud.entity.{EntityEvent, PersistentEntity}
 import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
+import io.comiccloud.rest.FullResult
 
 /**
   * it's a service to generate `code` for grant_type=authorization_code
@@ -27,6 +30,8 @@ object CodeEntity {
 
   case class CreateCode(ccc: CreateCodeCommand)
   case class CreateValidatedCode(ccc: CreateCodeCommand)
+  case class FindCodeByClientId(cac: FindCodeByClientIdCommand)
+
 }
 
 class CodeEntity(val clientsRepo: ClientsRepository,
@@ -47,8 +52,12 @@ class CodeEntity(val clientsRepo: ClientsRepository,
     // ========================================================================
     // atomicity operator show as below
     // ========================================================================
-
+    case cmd: FindCodeByClientIdCommand =>
+      sender ! FullResult(state)
+      context.parent ! Passivate(stopMessage = StopEntity)
   }
+
+
   override def isCreateMessage(cmd: Any): Boolean = cmd match {
     case ccc: CreateCodeCommand => true
     case cvc: CreateValidatedCode => true

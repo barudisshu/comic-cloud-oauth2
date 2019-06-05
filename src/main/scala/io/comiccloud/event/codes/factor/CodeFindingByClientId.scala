@@ -2,7 +2,7 @@ package io.comiccloud.event.codes.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import io.comiccloud.event.clients.ClientFO
-import io.comiccloud.event.codes.FindCodeByClientIdCommand
+import io.comiccloud.event.codes.FindCodeRelateClientIdCommand
 import io.comiccloud.models.Client
 import io.comiccloud.repository.ClientsRepository
 import io.comiccloud.rest.{EmptyResult, FullResult}
@@ -16,7 +16,7 @@ class CodeFindingByClientId(clientsRepo: ClientsRepository) extends Actor with A
   import context.dispatcher
 
   override def receive: Receive = {
-    case FindCodeByClientIdCommand(clientId) =>
+    case FindCodeRelateClientIdCommand(clientId) =>
       context become findByClientUid(sender)
       clientsRepo.findByUid(clientId) pipeTo self
   }

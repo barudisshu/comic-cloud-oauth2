@@ -44,8 +44,6 @@ libraryDependencies ++=Seq(
   "com.typesafe.slick"       %%  "slick"                        % slickVersion,
   "com.typesafe.slick"       %%  "slick-hikaricp"               % slickVersion,
   
-  "com.github.etaty"         %%  "rediscala"                    % "1.8.0",
-  
   "com.twitter"              %%  "chill-akka"                   % "0.9.2",
   "org.apache.commons"       %   "commons-lang3"                % "3.0",
   

@@ -11,7 +11,8 @@ trait CodeFactory extends EntityFactory {
   def clientsRepo: ClientsRepository
   def accountsRepo: AccountsRepository
 
-  def creator: ActorRef = context.actorOf(CodeCreator.props)
+  def creator: ActorRef = context.actorOf(CodeCreator.props())
+  def consumer: ActorRef = context.actorOf(CodeConsumer.props())
   def validator: ActorRef = context.actorOf(CodeCreateValidator.props(clientsRepo, accountsRepo))
   def findingByAccountId: ActorRef = context.actorOf(CodeFindingByAccountId.props(accountsRepo))
   def findingByClientId: ActorRef = context.actorOf(CodeFindingByClientId.props(clientsRepo))

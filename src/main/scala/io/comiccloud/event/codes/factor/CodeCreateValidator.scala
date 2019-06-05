@@ -2,7 +2,7 @@ package io.comiccloud.event.codes.factor
 
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.event.codes.CodeEntity.CreateValidatedCode
-import io.comiccloud.event.codes.{CodeFO, CodeFactory, CreateCodeCommand, FindCodeByAccountIdCommand, FindCodeByClientIdCommand}
+import io.comiccloud.event.codes.{CodeFO, CodeFactory, CreateCodeCommand, FindCodeRelateAccountIdCommand, FindCodeRelateClientIdCommand}
 import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
 
@@ -56,13 +56,13 @@ private[codes] class CodeCreateValidator(
 
   when(WaitingForRequest) {
     case Event(request: CreateCodeCommand, _) =>
-      findingByAccountId ! FindCodeByAccountIdCommand(request.vo.accountUid)
+      findingByAccountId ! FindCodeRelateAccountIdCommand(request.vo.accountUid)
       goto(CodeHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
   when(CodeHasRespondedAccount, 5 seconds){
     case Event(FullResult(_), data@ResolvedDependencies(inputs)) =>
-      findingByClientId ! FindCodeByClientIdCommand(inputs.request.vo.clientUid)
+      findingByClientId ! FindCodeRelateClientIdCommand(inputs.request.vo.clientUid)
       goto(CodeHasRespondedClient) using data
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the account")
