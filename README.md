@@ -40,3 +40,9 @@ put localhost:9000/api/code
     "clientId": "8a70c2923877f4caf6ab45538457c5d628e6bce0"
 }
 ```
+
+## 由Code获取token身份
+
+```
+get localhost:9000/api/code?codeId=6a734
+```

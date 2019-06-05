@@ -18,14 +18,13 @@ case class CodeInitialState(id: String, deleted: Boolean = false) extends CodeSt
   override def markDeleted: CodeState = this
 }
 object CodeFO {
-  def empty = CodeFO("", "", "", "", None)
-  implicit val format: RootJsonFormat[CodeFO] = jsonFormat7(CodeFO.apply)
+  def empty = CodeFO("", "", "", None)
+  implicit val format: RootJsonFormat[CodeFO] = jsonFormat6(CodeFO.apply)
 }
 
 case class CodeFO(id: String,
                   accountUid: String,
                   clientUid: String,
-                  code: String,
                   redirectUri: Option[String],
                   createdAt: Timestamp = Timestamp.valueOf(LocalDateTime.now),
                   deleted: Boolean = false) extends CodeState {

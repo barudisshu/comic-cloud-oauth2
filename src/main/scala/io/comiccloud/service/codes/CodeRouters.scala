@@ -31,19 +31,17 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
       pathPrefix("code") {
         put {
           entity(as[CreateCodeRequest]) { request =>
-            val id = UUID.randomUUID().toString
             val vo = CodeFO(
-              id = id,
+              id = Hashes.randomHexString(5),
               accountUid = request.accountId,
               clientUid = request.clientId,
-              code = Hashes.randomHexString(5),
               redirectUri = request.redirectUri
             )
             val command = CreateCodeCommand(vo)
             serviceAndComplete[CodeFO](command, codeRef)
           }
         } ~
-        (get & parameters('clientId)) { clientId =>
+        (get & parameters('codeId)) { clientId =>
           val command = FindCodeByClientIdCommand(clientId)
           serviceAndComplete[CodeFO](command, codeRef)
         }
