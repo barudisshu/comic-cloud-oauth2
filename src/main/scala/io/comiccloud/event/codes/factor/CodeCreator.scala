@@ -17,5 +17,8 @@ class CodeCreator() extends Actor with ActorLogging {
   import akka.pattern.pipe
   import context.dispatcher
 
-  override def receive: Receive = ???
+  override def receive: Receive = {
+    case CreateCodeCommand(vo) =>
+      sender() ! FullResult(vo)
+  }
 }

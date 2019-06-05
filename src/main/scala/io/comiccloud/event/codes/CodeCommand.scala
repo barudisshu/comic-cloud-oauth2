@@ -15,3 +15,15 @@ case class FindCodeByIdCommand(id: String) extends CodeCommand {
 case class FindCodeByAccountIdCommand(accountId: String) extends CodeCommand {
   override def entityId: String = accountId
 }
+
+case class FindCodeByClientIdCommand(clientId: String) extends CodeCommand {
+  override def entityId: String = clientId
+}
+
+case class ExistsCodeByAccountIdCommand(accountId: String) extends CodeCommand {
+  override def entityId: String = accountId
+}
+
+case class ExistsCodeByClientIdCommand(clientId: String) extends CodeCommand {
+  override def entityId: String = clientId
+}

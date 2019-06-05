@@ -84,7 +84,7 @@ private[clients] class ClientCreateValidator(
 
   whenUnhandled {
     case Event(StateTimeout, data) =>
-      log.error("Received state timeout in process to validate an order crreate request")
+      log.error("Received state timeout in process to validate an order create request")
       data.inputs.originator ! unexpectedFail
       stop
     case Event(other, data) =>

@@ -25,19 +25,37 @@ object CodeEntity {
   def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
     Props(new CodeEntity(clientsRepo, accountsRepo))
 
+  case class CreateCode(ccc: CreateCodeCommand)
+  case class CreateValidatedCode(ccc: CreateCodeCommand)
 }
 
 class CodeEntity(val clientsRepo: ClientsRepository,
                  val accountsRepo: AccountsRepository) extends PersistentEntity[CodeState] with CodeFactory {
   import CodeEntity._
 
+  override def initialState: CodeState = CodeInitialState.empty
+
   override def additionalCommandHandling: Receive = {
     case o: CreateCodeCommand =>
       // before create, check out the accountUid and the clientUid is legal
     validator.forward(o)
       state = CodeReadyFO.validation
+    case CreateValidatedCode(cmd) =>
+      val state = cmd.vo
+      persistAsync(CodeCreatedEvent(state))(handleEventAndRespond())
+
+    // ========================================================================
+    // atomicity operator show as below
+    // ========================================================================
+
   }
-  override def isCreateMessage(cmd: Any): Boolean = ???
-  override def initialState: CodeState = ???
-  override def handleEvent(event: EntityEvent): Unit = ???
+  override def isCreateMessage(cmd: Any): Boolean = cmd match {
+    case ccc: CreateCodeCommand => true
+    case cvc: CreateValidatedCode => true
+    case _ => false
+  }
+  override def handleEvent(event: EntityEvent): Unit = event match {
+    case CodeCreatedEvent(codeFO) =>
+      state = codeFO
+  }
 }
