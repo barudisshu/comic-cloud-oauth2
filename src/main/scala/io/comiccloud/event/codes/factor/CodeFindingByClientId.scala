@@ -18,7 +18,7 @@ class CodeFindingByClientId(clientsRepo: ClientsRepository) extends Actor with A
   override def receive: Receive = {
     case FindCodeByClientIdCommand(clientId) =>
       context become findByClientUid(sender)
-      clientsRepo.findByClientId(clientId) pipeTo self
+      clientsRepo.findByUid(clientId) pipeTo self
   }
   def findByClientUid(replyTo: ActorRef): Receive = {
     case Some(client: Client) =>

@@ -57,18 +57,18 @@ private[clients] class ClientCreateValidator(
       goto(ClientHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
-  when(ClientHasRespondedAccount, 5 seconds)(transform {
-    case Event(FullResult(_), data: ResolvedDependencies) =>
-      stay using data
+  when(ClientHasRespondedAccount, 5 seconds) {
+    case Event(FullResult(_), ResolvedDependencies(inputs)) =>
+      creator ! inputs.request
+      goto(PersistenceRecord) using LookedUpData(inputs, inputs.request.vo)
+    case Event(failure: Failure, data: ResolvedDependencies) =>
+      data.originator ! failure
+      stop
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the account")
       data.originator ! Failure(FailureType.Validation, RejectedClientError)
       stop
-  } using {
-    case FSM.State(state, ResolvedDependencies(inputs), _, _, _) =>
-      creator ! inputs.request
-      goto(PersistenceRecord) using LookedUpData(inputs, inputs.request.vo)
-  })
+  }
 
   when(PersistenceRecord, 10 seconds) {
     case Event(FullResult(txn: ClientFO), data: LookedUpData) =>

@@ -19,6 +19,7 @@ class ClientCreator(repo: ClientsRepository) extends Actor with ActorLogging {
     case CreateClientCommand(vo) =>
       val client = Client(
         id = None,
+        uid = vo.id,
         ownerId = vo.ownerId,
         clientId = vo.clientId,
         clientSecret = vo.clientSecret,

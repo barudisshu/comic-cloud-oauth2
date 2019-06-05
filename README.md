@@ -3,7 +3,7 @@
 ## 创建用户
 
 ```
-post localhost:9000/api/account
+put localhost:9000/api/account
 {
 	"username": "galudisu",
 	"password": "$ea(oo2!f",
@@ -20,9 +20,23 @@ post localhost:9000/api/account
 4. 申请的网站回调地址
 
 ```
-post localhost:9000/api/client
+put localhost:9000/api/client
 {
-    "account_id": "galudisu",
-    "redirect_uri": "http://localhost:3000/callback"
+    "accountId": "b19b28ae-6af5-4603-b588-02be213e2262",
+    "redirectUri": "http://localhost:3000/callback"
+}
+```
+
+## 申请Code
+
+1. 申请者Id，必须在account中有记录
+2. 客户端Id，必须在client中有记录
+3. 申请者网站回调地址
+
+```
+put localhost:9000/api/code
+{
+    "accountId": "b19b28ae-6af5-4603-b588-02be213e2262",
+    "clientId": "8a70c2923877f4caf6ab45538457c5d628e6bce0"
 }
 ```

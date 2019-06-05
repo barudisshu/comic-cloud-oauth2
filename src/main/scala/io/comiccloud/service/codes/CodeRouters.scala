@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import io.comiccloud.digest.Hashes
 import io.comiccloud.event.codes.{CodeFO, CreateCodeCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
@@ -16,7 +17,7 @@ import scala.concurrent.ExecutionContext
 
 object CodeRouters {
 
-  case class CreateCodeRequest(accountUid: String, clientUid: String, redirectUri: Option[String])
+  case class CreateCodeRequest(accountId: String, clientId: String, redirectUri: Option[String])
 
   object CreateCodeRequest {
     implicit val toJson: RootJsonFormat[CreateCodeRequest] = jsonFormat3(CreateCodeRequest.apply)
@@ -27,14 +28,14 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
   override def routes(implicit system: ActorSystem, ec: ExecutionContext,
                       mater: Materializer): Route = {
     logRequest("server") {
-      (put & path("client")) {
+      (put & path("code")) {
         entity(as[CreateCodeRequest]) {request =>
           val id = UUID.randomUUID().toString
           val vo = CodeFO(
             id = id,
-            accountUid = request.accountUid,
-            clientUid = request.clientUid,
-            code = id,
+            accountUid = request.accountId,
+            clientUid = request.clientId,
+            code = Hashes.randomHexString(5),
             redirectUri = request.redirectUri
           )
           val command = CreateCodeCommand(vo)

@@ -2,6 +2,7 @@ package io.comiccloud.repository
 
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import java.util.UUID
 
 import io.comiccloud.config.DbConfiguration
 import io.comiccloud.models.Client
@@ -37,6 +38,7 @@ class ClientsRepositoryTest(implicit ee: ExecutionEnv) extends Specification
     val client =
       Client(
         id = None,
+        uid = UUID.randomUUID().toString,
         ownerId = "ownerId",
         clientId = "client_id",
         clientSecret = "client_secret",

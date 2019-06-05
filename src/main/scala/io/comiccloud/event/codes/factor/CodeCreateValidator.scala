@@ -2,7 +2,7 @@ package io.comiccloud.event.codes.factor
 
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.event.codes.CodeEntity.CreateValidatedCode
-import io.comiccloud.event.codes.{CodeFO, CodeFactory, CreateCodeCommand, FindCodeByAccountIdCommand}
+import io.comiccloud.event.codes.{CodeFO, CodeFactory, CreateCodeCommand, FindCodeByAccountIdCommand, FindCodeByClientIdCommand}
 import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
 
@@ -60,30 +60,25 @@ private[codes] class CodeCreateValidator(
       goto(CodeHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
-  when(CodeHasRespondedAccount, 5 seconds)(transform{
-    case Event(FullResult(_), data: ResolvedDependencies) =>
-      stay using data
+  when(CodeHasRespondedAccount, 5 seconds){
+    case Event(FullResult(_), data@ResolvedDependencies(inputs)) =>
+      findingByClientId ! FindCodeByClientIdCommand(inputs.request.vo.clientUid)
+      goto(CodeHasRespondedClient) using data
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the account")
       data.originator ! Failure(FailureType.Validation, InvalidAccountIdError)
       stop
-  } using {
-    case FSM.State(state, data, _, _, _) =>
-      goto(CodeHasRespondedClient) using data
-  })
+  }
 
-  when(CodeHasRespondedClient, 5 seconds)(transform{
-    case Event(FullResult(_), data: ResolvedDependencies) =>
-      stay using data
+  when(CodeHasRespondedClient, 5 seconds){
+    case Event(FullResult(_), ResolvedDependencies(inputs)) =>
+      creator ! inputs.request
+      goto(PersistenceRecord) using LookedUpData(inputs, inputs.request.vo)
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the client")
       data.originator ! Failure(FailureType.Validation, InvalidClientIdError)
       stop
-  } using {
-    case FSM.State(state, ResolvedDependencies(inputs), _, _, _) =>
-      creator ! inputs.request
-      goto(PersistenceRecord) using LookedUpData(inputs, inputs.request.vo)
-  })
+  }
 
   when(PersistenceRecord, 10 seconds) {
     case Event(FullResult(txn: CodeFO), data: LookedUpData) =>
