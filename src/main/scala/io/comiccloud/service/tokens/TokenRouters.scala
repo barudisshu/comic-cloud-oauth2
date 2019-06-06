@@ -36,15 +36,16 @@ class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extend
       path("oauth" / "access_token") {
         post {
           entity(as[ClientCredentialRequest]) {request =>
-            val id = UUID.randomUUID().toString
+            val id = Hashes.randomSha256().toString
             val vo = TokenFO(
               id = id,
+              refreshId = Some(Hashes.randomSha256().toString),
               appid = request.appid,
               appkey = request.appkey,
-              token = Hashes.randomSha256().toString,
+              token = id,
             )
             val command = CreateClientCredentialTokenCommand(vo)
-            serviceAndComplete[TokenFO](command, tokenRef)
+            serviceAndComplete[TokenPair](command, tokenRef)
           }
         }
       }

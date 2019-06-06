@@ -32,6 +32,7 @@ class TokenEntity(val accountsRepo: AccountsRepository, val clientsRepo: Clients
       clientCreator.forward(o)
 
     case CreateValidatedToken(vo) =>
+      state = TokenPair(vo.id, vo.refreshId)
       persistAsync(TokenClientCredentialCreatedEvent(vo))(handleEventAndRespond())
   }
 
