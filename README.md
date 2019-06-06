@@ -24,8 +24,8 @@ put localhost:9000/api/account
 ```
 put localhost:9000/api/client
 {
-    "accountId": "b19b28ae-6af5-4603-b588-02be213e2262",
-    "redirectUri": "http://localhost:3000/callback"
+    "account_id": "b19b28ae-6af5-4603-b588-02be213e2262",
+    "redirect_uri": "http://localhost:3000/callback"
 }
 ```
 
@@ -38,8 +38,8 @@ put localhost:9000/api/client
 ```
 put localhost:9000/api/code
 {
-    "accountId": "b19b28ae-6af5-4603-b588-02be213e2262",
-    "clientId": "8a70c2923877f4caf6ab45538457c5d628e6bce0"
+    "account_id": "b19b28ae-6af5-4603-b588-02be213e2262",
+    "client_id": "8a70c2923877f4caf6ab45538457c5d628e6bce0"
 }
 ```
 
@@ -55,3 +55,58 @@ get localhost:9000/api/code/6a734
 ```
 
 ## 产生token
+
+1. 由appid和appkey产生，客户端模式，不包含重定向地址
+
+```
+post localhost:9000/api/oauth/access_token
+{
+    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
+    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
+    "grant_type": "client_credentials"
+}
+```
+
+2. 第三方平台模式，必须包含重定向地址，以及第三方申请的一次性code
+
+```
+post localhost:9000/api/oauth/access_token
+{
+    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
+    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
+    "redirect_uri": "http://baidu.com",
+    "code": "9afle",
+    "grant_type": "authorization_code"
+}
+```
+
+3. 账号密码模式，或者叫表单模式
+
+```
+post localhost:9000/api/oauth/access_token
+{
+    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
+    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
+    "username": "galudisu",
+    "password": "XFFkla!2",
+    "grant_type": "password"
+}
+```
+
+4. Refresh token
+
+```
+post localhost:9000/api/oauth/access_token
+{
+    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
+    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
+    "refreshToken": "ejpxxklakfalkd.......",
+    "grant_type": "refresh_token",
+}
+```
+
+## 统一资源入口
+
+```bash
+curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/oauth/resources
+```
