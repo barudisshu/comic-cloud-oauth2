@@ -7,15 +7,15 @@ import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 object ClientEntity {
   val Name = "client"
 
-  def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
-    Props(new ClientEntity(clientsRepo, accountsRepo))
+  def props(accountsRepo: AccountsRepository, clientsRepo: ClientsRepository): Props =
+    Props(new ClientEntity(accountsRepo, clientsRepo))
 
   case class CreateClient(ccc: CreateClientCommand)
   case class CreateValidatedClient(ccv: CreateClientCommand)
 }
 
-class ClientEntity(val clientsRepo: ClientsRepository,
-                   val accountsRepo: AccountsRepository) extends PersistentEntity[ClientState] with ClientFactory {
+class ClientEntity(val accountsRepo: AccountsRepository,
+                   val clientsRepo: ClientsRepository) extends PersistentEntity[ClientState] with ClientFactory {
 
   import ClientEntity._
 
@@ -23,17 +23,12 @@ class ClientEntity(val clientsRepo: ClientsRepository,
 
   override def additionalCommandHandling: Receive = {
     case o: CreateClientCommand =>
-      // before create, valid the accountId exists
       validator.forward(o)
       state = ValidationFO.validation
 
     case CreateValidatedClient(cmd) =>
       val state = cmd.vo
       persistAsync(ClientCreatedEvent(state))(handleEventAndRespond())
-
-    // ========================================================================
-    // atomicity operator show as below
-    // ========================================================================
 
     case cmd: FindClientByAccountIdCommand =>
       findingByAccountId.forward(cmd)

@@ -1,14 +1,9 @@
 package io.comiccloud.event.accounts
 
-import java.util.Date
-
 import akka.actor._
 import io.comiccloud.entity._
 import io.comiccloud.repository._
-import io.comiccloud.rest._
-import io.comiccloud.service.accounts.AccountAssociate
 
-import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object AccountEntity {
@@ -28,19 +23,12 @@ class AccountEntity(val repo: AccountsRepository) extends PersistentEntity[Accou
 
   override def additionalCommandHandling: Receive = {
     case o: CreateAccountCommand =>
-      // Kick off the validation process
       validator.forward(o)
       state = ValidationFO.validation
 
     case CreateValidatedAccount(cmd) =>
-      // After insert into db, handle the event update the state, we can persist the complete account
       val state = cmd.vo
       persistAsync(AccountCreatedEvent(state))(handleEventAndRespond())
-
-
-    // ========================================================================
-    // atomicity operator show as below
-    // ========================================================================
 
     case cmd: FindAccountByIdCommand =>
       findingById.forward(cmd)

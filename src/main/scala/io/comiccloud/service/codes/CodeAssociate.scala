@@ -7,13 +7,13 @@ import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 
 object CodeAssociate {
   val Name = "code-associate"
-  def props(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository): Props =
-    Props(new CodeAssociate(clientsRepo, accountsRepo))
+  def props(accountsRepo: AccountsRepository, clientsRepo: ClientsRepository): Props =
+    Props(new CodeAssociate(accountsRepo, clientsRepo))
 }
 
-class CodeAssociate(clientsRepo: ClientsRepository, accountsRepo: AccountsRepository) extends Aggregate[CodeState, CodeEntity] {
+class CodeAssociate(accountsRepo: AccountsRepository, clientsRepo: ClientsRepository) extends Aggregate[CodeState, CodeEntity] {
 
-  override def entityProps: Props = CodeEntity.props(clientsRepo, accountsRepo)
+  override def entityProps: Props = CodeEntity.props(accountsRepo, clientsRepo)
   override def receive: Receive = {
     case command: CreateCodeCommand =>
       forwardCommand(command)

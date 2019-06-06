@@ -1,8 +1,5 @@
 package io.comiccloud.event.accounts
 
-import java.sql.Timestamp
-import java.time.LocalDateTime
-
 import io.comiccloud.entity.EntityCommand
 
 trait AccountCommand extends EntityCommand
