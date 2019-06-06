@@ -19,6 +19,8 @@ put localhost:9000/api/account
 3. 申请者Id，拥有相关权限资格(此处不验证)
 4. 申请的网站回调地址
 
+授权服务平台，不作表单验证逻辑
+
 ```
 put localhost:9000/api/client
 {
@@ -41,8 +43,15 @@ put localhost:9000/api/code
 }
 ```
 
-## 由Code获取token身份
+## 获取Code信息
+
+1. 每读取一次code，这个实体应该变为passivation
+2. 读取的code信息，会作为协作域，用于生成有效的token
+
+首次获取生效，再次获取变更为404。
 
 ```
 get localhost:9000/api/code/6a734
 ```
+
+## 产生token

@@ -39,6 +39,7 @@ class CodeEntity(val clientsRepo: ClientsRepository,
   override def initialState: CodeState = CodeInitialState.empty
 
   override def additionalCommandHandling: Receive = {
+
     case o: CreateCodeCommand =>
       validator.forward(o)
       state = CodeReadyFO.validation
