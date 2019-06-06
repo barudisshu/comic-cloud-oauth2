@@ -28,11 +28,14 @@ case class CreatedValidationFO(id: String, deleted: Boolean = false) extends Tok
 }
 
 object TokenFO {
-  def empty = TokenFO("")
-  implicit val format: RootJsonFormat[TokenFO] = jsonFormat3(TokenFO.apply)
+  def empty = TokenFO("", "", "", "")
+  implicit val format: RootJsonFormat[TokenFO] = jsonFormat6(TokenFO.apply)
 }
 
 case class TokenFO(id: String,
+                   appid: String,
+                   appkey: String,
+                   token: String,
                    createdAt: Timestamp = Timestamp.valueOf(LocalDateTime.now()),
                    deleted: Boolean = false) extends TokenState {
   override def assignId(id: String): TokenState = this.copy(id)

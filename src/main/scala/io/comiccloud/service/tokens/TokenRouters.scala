@@ -1,9 +1,12 @@
 package io.comiccloud.service.tokens
 
+import java.util.UUID
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import io.comiccloud.digest.Hashes
 import io.comiccloud.event.tokens._
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
@@ -30,10 +33,16 @@ object TokenRouters {
 class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extends BasicRoutesDefinition {
   override def routes(implicit system: ActorSystem, ec: ExecutionContext, mater: Materializer): Route = {
     logRequestResult("server") {
-      path("token") {
+      path("oauth" / "access_token") {
         post {
           entity(as[ClientCredentialRequest]) {request =>
-            val vo = TokenFO(request.appid)
+            val id = UUID.randomUUID().toString
+            val vo = TokenFO(
+              id = id,
+              appid = request.appid,
+              appkey = request.appkey,
+              token = Hashes.randomSha256().toString,
+            )
             val command = CreateClientCredentialTokenCommand(vo)
             serviceAndComplete[TokenFO](command, tokenRef)
           }

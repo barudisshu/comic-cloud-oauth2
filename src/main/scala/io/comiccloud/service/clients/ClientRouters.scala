@@ -34,8 +34,8 @@ class ClientRouters(clientRef: ActorRef)(implicit val ec: ExecutionContext) exte
           val vo = ClientFO(
             id = id,
             ownerId = request.accountId,
-            clientId = Hashes.randomSha1().toString,
-            clientSecret = Hashes.randomSha1().toString,
+            clientId = Hashes.randomMd5().toString,
+            clientSecret = Hashes.randomMd5().toString,
             redirectUri = request.redirectUri
           )
           val command = CreateClientCommand(vo)

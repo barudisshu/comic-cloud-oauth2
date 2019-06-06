@@ -1,6 +1,8 @@
 package io.comiccloud.event.tokens
 
 import akka.actor._
+import akka.cluster.sharding.ShardRegion.Passivate
+import io.comiccloud.entity.PersistentEntity.StopEntity
 import io.comiccloud.entity._
 import io.comiccloud.repository._
 
@@ -10,6 +12,8 @@ object TokenEntity {
   val Name = "token"
   def props(accountsRepo: AccountsRepository, clientsRepo: ClientsRepository): Props =
     Props(new TokenEntity(accountsRepo, clientsRepo))
+
+  case class CreateValidatedToken(vo: TokenFO)
 }
 
 class TokenEntity(val accountsRepo: AccountsRepository, val clientsRepo: ClientsRepository) extends
@@ -23,6 +27,12 @@ class TokenEntity(val accountsRepo: AccountsRepository, val clientsRepo: Clients
     case o: CreateClientCredentialTokenCommand =>
       clientCredential.forward(o)
       state = CreatedValidationFO.validation
+
+    case o: CreateValidatedClientCredentialTokenCommand =>
+      clientCreator.forward(o)
+
+    case CreateValidatedToken(vo) =>
+      persistAsync(TokenClientCredentialCreatedEvent(vo))(handleEventAndRespond())
   }
 
   override def isCreateMessage(cmd: Any): Boolean = cmd match {
