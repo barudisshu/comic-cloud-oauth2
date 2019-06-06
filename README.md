@@ -44,5 +44,5 @@ put localhost:9000/api/code
 ## 由Code获取token身份
 
 ```
-get localhost:9000/api/code?codeId=6a734
+get localhost:9000/api/code/6a734
 ```

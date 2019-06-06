@@ -20,7 +20,3 @@ case class FindCodeRelateClientIdCommand(clientId: String) extends CodeCommand {
   override def entityId: String = clientId
 }
 
-case class FindCodeByClientIdCommand(clientId: String) extends CodeCommand {
-  override def entityId: String = clientId
-}
-

@@ -21,7 +21,7 @@ class CodeAssociate(clientsRepo: ClientsRepository, accountsRepo: AccountsReposi
       forwardCommand(command)
     case command: FindCodeRelateClientIdCommand =>
       forwardCommand(command)
-    case command: FindCodeByClientIdCommand =>
+    case command: FindCodeByIdCommand =>
       forwardCommand(command)
   }
 }

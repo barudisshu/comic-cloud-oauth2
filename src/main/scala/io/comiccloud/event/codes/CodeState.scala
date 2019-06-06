@@ -41,15 +41,11 @@ case class CodeReadyFO(id: String, deleted: Boolean = false) extends CodeState {
   override def markDeleted: CodeState = this
 }
 
-object CreateCodeFO {
-  implicit val format: RootJsonFormat[CreateCodeFO] = jsonFormat5(CreateCodeFO.apply)
+object CodeTokenFO {
+  implicit val format: RootJsonFormat[CodeTokenFO] = jsonFormat2(CodeTokenFO.apply)
 }
 
-case class CreateCodeFO(id: String,
-                          ownerId: String,
-                          redirectUri: Option[String],
-                          createdAt: Timestamp = Timestamp.valueOf(LocalDateTime.now),
-                          deleted: Boolean = false) extends CodeState {
+case class CodeTokenFO(id: String, deleted: Boolean = false) extends CodeState {
   override def assignId(id: String): CodeState = this.copy(id)
   override def markDeleted: CodeState = this
 }

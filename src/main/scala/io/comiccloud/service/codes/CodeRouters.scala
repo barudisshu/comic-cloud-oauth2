@@ -1,13 +1,11 @@
 package io.comiccloud.service.codes
 
-import java.util.UUID
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import io.comiccloud.digest.Hashes
-import io.comiccloud.event.codes.{CodeFO, CreateCodeCommand, FindCodeByClientIdCommand}
+import io.comiccloud.event.codes.{CodeTokenFO, CodeFO, CreateCodeCommand, FindCodeByIdCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.codes.CodeRouters.CreateCodeRequest
@@ -41,9 +39,9 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
             serviceAndComplete[CodeFO](command, codeRef)
           }
         } ~
-        (get & parameters('codeId)) { clientId =>
-          val command = FindCodeByClientIdCommand(clientId)
-          serviceAndComplete[CodeFO](command, codeRef)
+        (get & path(Segment)) { codeId =>
+          val command = FindCodeByIdCommand(codeId)
+          serviceAndComplete[CodeTokenFO](command, codeRef)
         }
       }
     }
