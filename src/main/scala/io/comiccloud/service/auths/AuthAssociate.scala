@@ -1,7 +1,6 @@
 package io.comiccloud.service.auths
 
-import akka.actor.Props
-import io.comiccloud.aggregate.Aggregate
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import io.comiccloud.event.auths._
 
 object AuthAssociate {
@@ -9,10 +8,10 @@ object AuthAssociate {
   def props(): Props = Props(new AuthAssociate())
 }
 
-class AuthAssociate() extends Aggregate[AuthState, AuthEntity] {
-  override def entityProps: Props = AuthEntity.props()
+class AuthAssociate() extends Actor with ActorLogging {
+  val auth: ActorRef = context.actorOf(AuthEntity.props())
   override def receive: Receive = {
     case command: VerificationAuthCommand =>
-      forwardCommand(command)
+      auth.forward(command)
   }
 }

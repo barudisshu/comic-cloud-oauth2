@@ -41,8 +41,7 @@ object PersistentEntity {
   }
 }
 
-abstract class PersistentEntity[FO <: EntityFieldsObject[String, FO]: ClassTag]
-  extends PersistentActor with ActorLogging {
+abstract class PersistentEntity[FO <: EntityFieldsObject[String, FO]: ClassTag] extends PersistentActor with ActorLogging {
   import PersistentEntity._
   import ShardRegion.Passivate
   import concurrent.duration._

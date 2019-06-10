@@ -1,8 +1,7 @@
 package io.comiccloud.event.auths
 
 import akka.actor._
-import io.comiccloud.entity._
-import io.comiccloud.repository._
+import io.comiccloud.rest.FullResult
 
 import scala.language.postfixOps
 
@@ -12,29 +11,25 @@ object AuthEntity {
 
 
 }
-class AuthEntity() extends PersistentEntity[AuthState] with AuthFactory {
+class AuthEntity() extends Actor with ActorLogging with AuthFactory {
 
-  import AuthEntity._
-
-  override def initialState: AuthState = AuthInitialState.empty
-
-  override def additionalCommandHandling: Receive = {
+  override def receive: Receive = {
     case o: VerificationAuthCommand =>
       verify.forward(o)
-      state = AuthVerifyFO(o.entityId)
 
     case VerifiedAuthCommand(vo) =>
-      persistAsync(AuthVerifiedEvent(vo))(handleEventAndRespond())
+      val user = User(
+        userId = "a86675a4-8695-4431-9531-7edd2aaa9c04",
+        username = "galudisu",
+        email = "galudisu@gmail.com",
+        phone = None
+      )
+      val authInfo = AuthInfo(
+        user,
+        "1d991691bde2f5f4908d20a5df56dd9040e796ac",
+        None
+      )
+      sender() ! FullResult(authInfo)
   }
 
-  override def isCreateMessage(cmd: Any): Boolean = cmd match {
-    case VerificationAuthCommand => true
-    case VerifiedAuthCommand => true
-    case _ => false
-  }
-
-  override def handleEvent(event: EntityEvent): Unit = event match {
-    case AuthVerifiedEvent(vo) =>
-      state = vo
-  }
 }
