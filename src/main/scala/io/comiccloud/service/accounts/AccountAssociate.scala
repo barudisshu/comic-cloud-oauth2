@@ -1,7 +1,6 @@
 package io.comiccloud.service.accounts
 
-import akka.actor.Props
-import io.comiccloud.aggregate.Aggregate
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import io.comiccloud.event.accounts._
 import io.comiccloud.repository.AccountsRepository
 
@@ -10,14 +9,12 @@ object AccountAssociate {
   def props(repository: AccountsRepository): Props = Props(new AccountAssociate(repository))
 }
 
-class AccountAssociate(repository: AccountsRepository) extends Aggregate[AccountState, AccountEntity] {
-  override def entityProps: Props = AccountEntity.props(repository)
-
+class AccountAssociate(repository: AccountsRepository) extends Actor with ActorLogging {
+  val actorRef: ActorRef = context.actorOf(AccountEntity.props(repository))
   override def receive: Receive = {
     case command: CreateAccountCommand =>
-      forwardCommand(command)
-
+      actorRef.forward(command)
     case command: FindAccountByIdCommand =>
-      forwardCommand(command)
+      actorRef.forward(command)
   }
 }

@@ -1,7 +1,7 @@
 package io.comiccloud.event.accounts.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import io.comiccloud.event.accounts.{AccountFO, CreateAccountCommand}
+import io.comiccloud.event.accounts.{AccountInfo, CreateAccountCommand}
 import io.comiccloud.models.Account
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest._
@@ -31,7 +31,7 @@ class AccountCreator(repo: AccountsRepository) extends Actor with ActorLogging {
       repo.insert(account) pipeTo self
   }
 
-  def feedback(o: AccountFO, replyTo: ActorRef): Receive = {
+  def feedback(o: AccountInfo, replyTo: ActorRef): Receive = {
     case acc: Account =>
       replyTo ! FullResult(o)
       self ! PoisonPill

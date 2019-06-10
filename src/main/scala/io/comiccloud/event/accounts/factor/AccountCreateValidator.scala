@@ -2,7 +2,7 @@ package io.comiccloud.event.accounts.factor
 
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.event.accounts.AccountEntity.CreateValidatedAccount
-import io.comiccloud.event.accounts.{AccountFO, AccountFactory, CreateAccountCommand, FindAccountByIdCommand}
+import io.comiccloud.event.accounts.{AccountInfo, AccountFactory, CreateAccountCommand, FindAccountByIdCommand}
 import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.rest._
 
@@ -30,7 +30,7 @@ private[accounts] object AccountCreateValidator {
   }
   case class UnresolvedDependencies(inputs:Inputs) extends InputsData
   case class ResolvedDependencies(inputs:Inputs) extends InputsData
-  case class LookedUpData(inputs:Inputs, user:AccountFO) extends InputsData
+  case class LookedUpData(inputs:Inputs, user:AccountInfo) extends InputsData
 
   object ResolutionIdent extends Enumeration {
     val Account: Value = Value
@@ -53,7 +53,7 @@ private[accounts] class AccountCreateValidator(val repo: AccountsRepository) ext
   }
 
   when(LookingUpEntities, 5 seconds)(transform{
-    case Event(FullResult(a: AccountFO), data: ResolvedDependencies) =>
+    case Event(FullResult(a: AccountInfo), data: ResolvedDependencies) =>
       log.error("the account has been created before")
       data.originator ! Failure(FailureType.Validation, RejectedUserError)
       stop
@@ -66,7 +66,7 @@ private[accounts] class AccountCreateValidator(val repo: AccountsRepository) ext
   })
 
   when(InsertDb, 10 seconds) {
-    case Event(FullResult(txn: AccountFO), data: LookedUpData) =>
+    case Event(FullResult(txn: AccountInfo), data: LookedUpData) =>
       context.parent.tell(CreateValidatedAccount(data.inputs.request), data.inputs.originator)
       stop
     case Event(failure: Failure, data: LookedUpData) =>
