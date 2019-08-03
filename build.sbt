@@ -55,29 +55,3 @@ libraryDependencies ++=Seq(
   "org.scalamock"            %%  "scalamock-scalatest-support"  % scalaMockVersion     % Test
 )
 
-enablePlugins(DockerPlugin)
-
-dockerfile in docker := {
-  // The assembly task generates a fat JAR file
-  val artifact: File = assembly.value
-  val artifactTargetPath = s"/src/${artifact.name}"
-
-  new Dockerfile {
-    from("java")
-    add(artifact, artifactTargetPath)
-    entryPoint("java", "-jar", artifactTargetPath)
-    expose(9000)
-  }
-}
-
-imageNames in docker := Seq(
-  // Sets the latest tag
-  ImageName(s"${organization.value}/${name.value}:latest"),
-
-  // Sets a name with a tag that contains the project version
-  ImageName(
-    namespace = Some(organization.value),
-    repository = name.value,
-    tag = Some("v" + version.value)
-  )
-)
