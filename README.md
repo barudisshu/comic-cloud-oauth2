@@ -59,7 +59,7 @@ get localhost:9000/api/code/6a734
 1. 由appid和appkey产生，客户端模式，不包含重定向地址
 
 ```
-post localhost:9000/api/oauth/access_token
+post localhost:9000/api/access_token
 {
     "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
     "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
@@ -70,7 +70,7 @@ post localhost:9000/api/oauth/access_token
 2. 第三方平台模式，必须包含重定向地址，以及第三方申请的一次性code
 
 ```
-post localhost:9000/api/oauth/access_token
+post localhost:9000/api/access_token
 {
     "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
     "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
@@ -83,7 +83,7 @@ post localhost:9000/api/oauth/access_token
 3. 账号密码模式，或者叫表单模式
 
 ```
-post localhost:9000/api/oauth/access_token
+post localhost:9000/api/access_token
 {
     "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
     "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
@@ -96,7 +96,7 @@ post localhost:9000/api/oauth/access_token
 4. Refresh token
 
 ```
-post localhost:9000/api/oauth/access_token
+post localhost:9000/api/access_token
 {
     "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
     "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
@@ -108,5 +108,5 @@ post localhost:9000/api/oauth/access_token
 ## 统一资源入口
 
 ```bash
-curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/oauth/resources
+curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/resources
 ```
