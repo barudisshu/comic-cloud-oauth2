@@ -33,7 +33,7 @@ object TokenRouters {
 class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extends BasicRoutesDefinition {
   override def routes(implicit system: ActorSystem, ec: ExecutionContext, mater: Materializer): Route = {
     logRequestResult("server") {
-      path("oauth" / "access_token") {
+      pathPrefix("token") {
         post {
           entity(as[ClientCredentialRequest]) {request =>
             val id = Hashes.randomSha256().toString
@@ -42,7 +42,7 @@ class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extend
               refreshId = Some(Hashes.randomSha256().toString),
               appid = request.appid,
               appkey = request.appkey,
-              token = id,
+              token = id
             )
             val command = CreateClientCredentialTokenCommand(vo)
             serviceAndComplete[TokenPair](command, tokenRef)

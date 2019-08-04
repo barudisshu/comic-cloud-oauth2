@@ -28,18 +28,20 @@ class ClientRouters(clientRef: ActorRef)(implicit val ec: ExecutionContext) exte
   override def routes(implicit system: ActorSystem, ec: ExecutionContext,
                       mater: Materializer): Route = {
     logRequest("server") {
-      (put & path("client")) {
-        entity(as[CreateClientRequest]) { request =>
-          val id = UUID.randomUUID().toString
-          val vo = ClientFO(
-            id = id,
-            ownerId = request.accountId,
-            clientId = Hashes.randomMd5().toString,
-            clientSecret = Hashes.randomMd5().toString,
-            redirectUri = request.redirectUri
-          )
-          val command = CreateClientCommand(vo)
-          serviceAndComplete[ClientFO](command, clientRef)
+      pathPrefix("client") {
+        put {
+          entity(as[CreateClientRequest]) { request =>
+            val id      = UUID.randomUUID().toString
+            val vo      = ClientFO(
+              id = id,
+              ownerId = request.accountId,
+              clientId = Hashes.randomMd5().toString,
+              clientSecret = Hashes.randomMd5().toString,
+              redirectUri = request.redirectUri
+            )
+            val command = CreateClientCommand(vo)
+            serviceAndComplete[ClientFO](command, clientRef)
+          }
         }
       }
     }

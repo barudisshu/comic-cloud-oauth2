@@ -7,6 +7,7 @@ import io.comiccloud.rest._
 import io.comiccloud.service.accounts._
 import io.comiccloud.service.clients._
 import io.comiccloud.service.codes._
+import io.comiccloud.service.resources.{ResourceAssociate, ResourceRouters}
 import io.comiccloud.service.tokens.{TokenAssociate, TokenRouters}
 
 class ComicBoot extends Bootstrap with DbConfiguration {
@@ -20,7 +21,8 @@ class ComicBoot extends Bootstrap with DbConfiguration {
     val clientRef = system.actorOf(ClientAssociate.props(accountRepo, clientRepo), ClientAssociate.Name)
     val codeRef = system.actorOf(CodeAssociate.props(accountRepo, clientRepo), CodeAssociate.Name)
     val tokenRef = system.actorOf(TokenAssociate.props(accountRepo, clientRepo), TokenAssociate.Name)
+    val resourceRef = system.actorOf(ResourceAssociate.props(), ResourceAssociate.Name)
 
-    List(new AccountRouters(accountRef), new ClientRouters(clientRef), new CodeRouters(codeRef), new TokenRouters(tokenRef))
+    List(new AccountRouters(accountRef), new ClientRouters(clientRef), new CodeRouters(codeRef), new TokenRouters(tokenRef), new ResourceRouters(resourceRef))
   }
 }
