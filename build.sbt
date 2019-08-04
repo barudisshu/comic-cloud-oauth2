@@ -43,6 +43,7 @@ libraryDependencies ++= Seq(
   // alpakka-cassandra
   "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % alpakkaCassandraVersion,
 
+  // todo: remove all mysql components
   "mysql" % "mysql-connector-java" % mysqlDriverVersion % Runtime,
   "com.zaxxer" % "HikariCP" % "2.7.8",
   "com.typesafe.slick" %% "slick" % slickVersion,
@@ -59,3 +60,24 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-scalatest-support" % scalaMockVersion % Test
 )
 
+enablePlugins(DockerPlugin)
+
+dockerfile in docker := {
+  val jarFile: File   = sbt.Keys.`package`.in(Compile, packageBin).value
+  val classpath       = (managedClasspath in Compile).value
+  val mainclass       = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+  val jarTarget       = s"/app/${jarFile.getName}"
+  // Make a colon separated classpath with the JAR file
+  val classpathString = classpath.files.map("/app/" + _.getName)
+                                 .mkString(":") + ":" + jarTarget
+  new Dockerfile {
+    // Base image
+    from("openjdk:8-jre")
+    // Add all files on the classpath
+    add(classpath.files, "/app/")
+    // Add the JAR file
+    add(jarFile, jarTarget)
+    // On launch run Java with the classpath and the main class
+    entryPoint("java", "-cp", classpathString, mainclass)
+  }
+}
