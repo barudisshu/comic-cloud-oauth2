@@ -15,6 +15,11 @@ case class ResourceInitialState(id: String, deleted: Boolean = false) extends Re
   override def markDeleted: ResourceState = this
 }
 
+case class CredentialsFO(id: String, deleted: Boolean = false) extends ResourceState {
+  override def assignId(id: String): ResourceState = this.copy(id)
+  override def markDeleted: ResourceState = this
+}
+
 object ResourceFO {
   def empty = ResourceFO("", "")
   implicit val format: RootJsonFormat[ResourceFO] = jsonFormat3(ResourceFO.apply)

@@ -5,20 +5,19 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.Credentials
+import akka.pattern.ask
 import akka.stream.Materializer
-import io.comiccloud.event.accounts.AccountFO
+import akka.util.Timeout
+import io.comiccloud.event.resources.{CredentialsDeliverCommand, CredentialsFO, ResourceFO}
 import io.comiccloud.rest.BasicRoutesDefinition
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object ResourceRouters {
-  def oauth2Authenticator(resourceRef: ActorRef)(implicit ec: ExecutionContext): AsyncAuthenticator[AccountFO] = {
-    case p@Credentials.Provided(identifier) =>
-      Future {
-        // potentially
-        None
-      }
-
+  def oauth2Authenticator(resourceRef: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout): AsyncAuthenticator[ResourceFO] = {
+    case Credentials.Provided(token) =>
+      val command = CredentialsDeliverCommand(CredentialsFO(token))
+      resourceRef.ask(command).mapTo[Option[ResourceFO]]
     case _ => Future.successful(None)
   }
 }
@@ -31,7 +30,7 @@ class ResourceRouters(resourceRef: ActorRef)(implicit val ec: ExecutionContext) 
     logRequestResult("server") {
       pathPrefix("resources") {
         get {
-          authenticateOAuth2Async[AccountFO]("realm", oauth2Authenticator(resourceRef)) {
+          authenticateOAuth2Async[ResourceFO]("realm", oauth2Authenticator(resourceRef)) {
             auth => complete(OK, auth)
           }
         }

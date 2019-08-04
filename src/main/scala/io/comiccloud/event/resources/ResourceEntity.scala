@@ -11,16 +11,18 @@ object ResourceEntity {
 class ResourceEntity() extends PersistentEntity[ResourceState] with ResourceFactory {
   import ResourceEntity._
 
+  override def initialState: ResourceState = ResourceInitialState.empty
+
   override def additionalCommandHandling: Receive = {
-    case o: CredentialVerifiedCommand =>
+    case o: CredentialsDeliverCommand =>
       resourceCredential.forward(o)
       state = ResourceFO.empty
-
   }
-  override def isCreateMessage(cmd: Any): Boolean = {
+
+  override def isCreateMessage(cmd: Any): Boolean = cmd match {
+    case cmd: CredentialsDeliverCommand => true
     case _ => false
   }
-  override def initialState: ResourceState = ResourceInitialState.empty
   override def handleEvent(event: EntityEvent): Unit = event match {
     case CredentialVerifiedEvent(vo) =>
       state = vo
