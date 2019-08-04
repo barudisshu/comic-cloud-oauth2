@@ -30,10 +30,10 @@ object TokenRouters {
 class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extends BasicRoutesDefinition {
   override def routes(implicit system: ActorSystem, ec: ExecutionContext, mater: Materializer): Route = {
     logRequestResult("server") {
-      path("token") {
+      pathPrefix("token") {
         post {
-          entity(as[ClientCredentialRequest]) {request =>
-            val vo = TokenFO(request.appid)
+          entity(as[ClientCredentialRequest]) { request =>
+            val vo      = TokenFO(request.appid)
             val command = CreateClientCredentialTokenCommand(vo)
             serviceAndComplete[TokenFO](command, tokenRef)
           }

@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import io.comiccloud.event.accounts.{AccountFO, CreateAccountCommand}
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
-import AccountRouters.CreateAccountRequest
+import io.comiccloud.service.accounts.AccountRouters.CreateAccountRequest
 import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
@@ -30,18 +30,20 @@ object AccountRouters {
 class AccountRouters(accountRef: ActorRef)(implicit val ec: ExecutionContext) extends BasicRoutesDefinition {
   override def routes(implicit system: ActorSystem, ec: ExecutionContext, mater: Materializer): Route = {
     logRequestResult("server") {
-      (put & path("account")) {
-        entity(as[CreateAccountRequest]) { request =>
-          val id = UUID.randomUUID().toString
-          val vo = AccountFO(
-            id,
-            request.username,
-            request.password,
-            request.salt,
-            request.email,
-            request.phone)
-          val command = CreateAccountCommand(vo)
-          serviceAndComplete[AccountFO](command, accountRef)
+      pathPrefix("account") {
+        put {
+          entity(as[CreateAccountRequest]) { request =>
+            val id      = UUID.randomUUID().toString
+            val vo      = AccountFO(
+              id,
+              request.username,
+              request.password,
+              request.salt,
+              request.email,
+              request.phone)
+            val command = CreateAccountCommand(vo)
+            serviceAndComplete[AccountFO](command, accountRef)
+          }
         }
       }
     }

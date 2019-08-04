@@ -39,9 +39,9 @@ object TokenClientCredentialCreateValidator {
 
 }
 
-  private[tokens] class TokenClientCredentialCreateValidator(
-                                                           val accountsRepo: AccountsRepository,
-                                                           val clientsRepo: ClientsRepository) extends
+private[tokens] class TokenClientCredentialCreateValidator(
+                                                            val accountsRepo: AccountsRepository,
+                                                            val clientsRepo: ClientsRepository) extends
   FSM[TokenClientCredentialCreateValidator.State, TokenClientCredentialCreateValidator.Data] with TokenFactory {
 
   startWith(WaitingForRequest, NoData)
@@ -52,21 +52,20 @@ object TokenClientCredentialCreateValidator {
       stop
   }
 
-
-    whenUnhandled {
-      case Event(StateTimeout, data) =>
-        log.error("Received state timeout in process to validate an order create request")
-        data.inputs.originator ! unexpectedFail
-        stop
-      case Event(other, data) =>
-        log.error("Received unexpected message of {} in state {}", other, stateName)
-        data.inputs.originator ! unexpectedFail
-        stop
-    }
-
-    def unexpectedFail = Failure(FailureType.Service, ServiceResult.UnexpectedFailure)
-
+  whenUnhandled {
+    case Event(StateTimeout, data) =>
+      log.error("Received state timeout in process to validate an order create request")
+      data.inputs.originator ! unexpectedFail
+      stop
+    case Event(other, data) =>
+      log.error("Received unexpected message of {} in state {}", other, stateName)
+      data.inputs.originator ! unexpectedFail
+      stop
   }
+
+  def unexpectedFail = Failure(FailureType.Service, ServiceResult.UnexpectedFailure)
+
+}
 
 
 

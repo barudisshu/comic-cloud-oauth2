@@ -29,7 +29,7 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
       pathPrefix("code") {
         put {
           entity(as[CreateCodeRequest]) { request =>
-            val vo = CodeFO(
+            val vo      = CodeFO(
               id = Hashes.randomHexString(5),
               accountUid = request.accountId,
               clientUid = request.clientId,
