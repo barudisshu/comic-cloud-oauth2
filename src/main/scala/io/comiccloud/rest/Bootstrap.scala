@@ -7,14 +7,16 @@ trait Bootstrap {
 
   def bootup(system: ActorSystem): List[BasicRoutesDefinition]
 
-  def startSingleton(system: ActorSystem, props: Props,
-                     managerName: String, terminationMessage: Any = PoisonPill): ActorRef = {
+  def startSingleton(system: ActorSystem,
+                     props: Props,
+                     managerName: String,
+                     terminationMessage: Any = PoisonPill): ActorRef = {
 
     system.actorOf(
-      ClusterSingletonManager.props(
-        singletonProps = props,
-        terminationMessage = terminationMessage,
-        settings = ClusterSingletonManagerSettings(system)),
-      managerName)
+      ClusterSingletonManager.props(singletonProps = props,
+                                    terminationMessage = terminationMessage,
+                                    settings = ClusterSingletonManagerSettings(system)),
+      managerName
+    )
   }
 }

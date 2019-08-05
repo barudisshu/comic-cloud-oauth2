@@ -15,14 +15,13 @@ class Server(boot: Bootstrap, service: String) extends HttpConfig {
 
   import akka.http.scaladsl.server.Directives._
 
-  implicit val system: ActorSystem = ActorSystem()
+  implicit val system: ActorSystem      = ActorSystem(clusterName)
   implicit val mater: ActorMaterializer = ActorMaterializer()
 
   import system.dispatcher
 
-
   //Boot up each service module from the config and get the routes
-  val routes: List[Route] = boot.bootup(system).map(_.routes)
+  val routes: List[Route]  = boot.bootup(system).map(_.routes)
   val definedRoutes: Route = routes.reduce(_ ~ _)
 
   val finalRoutes: Route = pathPrefix("api")(definedRoutes)
@@ -30,12 +29,12 @@ class Server(boot: Bootstrap, service: String) extends HttpConfig {
   val serverSource: Source[Http.IncomingConnection, Future[Http.ServerBinding]] =
     Http().bind(interface = httpInterface, port = httpPort)
 
-
   val log = Logging(system.eventStream, "Server")
 
   log.info("Starting up on port {} and ip {}", httpPort, httpInterface)
 
-  val sink: Sink[Http.IncomingConnection, Future[Done]] = Sink.foreach[Http.IncomingConnection](_.handleWith(finalRoutes))
+  val sink: Sink[Http.IncomingConnection, Future[Done]] =
+    Sink.foreach[Http.IncomingConnection](_.handleWith(finalRoutes))
 
   serverSource.to(sink).run
 }

@@ -4,11 +4,13 @@ import java.sql.Timestamp
 import java.util.Date
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.joda.time.DateTime
+import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
 import spray.json._
 
 /**
- * Root json protocol class for others to extend from
- */
+  * Root json protocol class for others to extend from
+  */
 trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   import reflect._
   private val PASS1       = """([A-Z]+)([A-Z][a-z])""".r
@@ -16,7 +18,8 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   private val REPLACEMENT = "$1_$2"
   override protected def extractFieldNames(classTag: ClassTag[_]): Array[String] = {
     import java.util.Locale
-    def snakify(name: String) = PASS2.replaceAllIn(PASS1.replaceAllIn(name, REPLACEMENT), REPLACEMENT).toLowerCase(Locale.US)
+    def snakify(name: String) =
+      PASS2.replaceAllIn(PASS1.replaceAllIn(name, REPLACEMENT), REPLACEMENT).toLowerCase(Locale.US)
     super.extractFieldNames(classTag).map { snakify }
   }
   implicit object DateFormat extends JsonFormat[Date] {
@@ -35,8 +38,8 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   }
   implicit object AnyJsonFormat extends JsonFormat[Any] {
     def write(x: Any): JsValue = x match {
-      case n: Int                   => JsNumber(n)
-      case s: String                => JsString(s)
+      case n: Int           => JsNumber(n)
+      case s: String        => JsString(s)
       case b: Boolean if b  => JsTrue
       case b: Boolean if !b => JsFalse
     }
@@ -46,6 +49,14 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
       case JsTrue      => true
       case JsFalse     => false
       case _           => serializationError(s"serialization error")
+    }
+  }
+  implicit object DateJsonFormat extends RootJsonFormat[DateTime] {
+    private val parserISO: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+    override def write(obj: DateTime)        = JsString(parserISO.print(obj))
+    override def read(json: JsValue): DateTime = json match {
+      case JsString(s) => parserISO.parseDateTime(s)
+      case _           => throw DeserializationException("Error info you want here ...")
     }
   }
 }

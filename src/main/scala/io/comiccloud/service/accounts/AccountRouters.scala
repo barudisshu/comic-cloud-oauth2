@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
-import io.comiccloud.event.accounts.{AccountFO, CreateAccountCommand}
+import com.datastax.driver.core.utils.UUIDs
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.accounts.AccountRouters.CreateAccountRequest
@@ -33,7 +33,7 @@ class AccountRouters(accountRef: ActorRef)(implicit val ec: ExecutionContext) ex
       pathPrefix("account") {
         put {
           entity(as[CreateAccountRequest]) { request =>
-            val id      = UUID.randomUUID().toString
+            val id      = UUIDs.timeBased().toString
             val vo      = AccountFO(
               id,
               request.username,

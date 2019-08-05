@@ -1,4 +1,6 @@
-# 基于Akka统一认证授权服务
+Akka based oauth2 
+=================
+
 
 
 仅token和code才需要sharding region，其它领域实体不需要

@@ -3,10 +3,10 @@ package io.comiccloud.rest
 sealed abstract class ServiceResult[+A] {
   def isEmpty: Boolean
   def isValid: Boolean
-  def getOrElse[B >: A](default: => B): B = default
-  def map[B](f: A => B): ServiceResult[B] = EmptyResult
+  def getOrElse[B >: A](default: => B): B                    = default
+  def map[B](f: A => B): ServiceResult[B]                    = EmptyResult
   def flatMap[B](f: A => ServiceResult[B]): ServiceResult[B] = EmptyResult
-  def filter(p: A => Boolean): ServiceResult[A] = this
+  def filter(p: A => Boolean): ServiceResult[A]              = this
   def toOption: Option[A] = this match {
     case FullResult(a) => Some(a)
     case _             => None
@@ -14,7 +14,8 @@ sealed abstract class ServiceResult[+A] {
 }
 
 object ServiceResult {
-  val UnexpectedFailure = ErrorMessage("common.unexpect", Some("An unexpected exception has occurred"))
+  val UnexpectedFailure =
+    ErrorMessage("common.unexpect", Some("An unexpected exception has occurred"))
 
   def fromOption[A](opt: Option[A]): ServiceResult[A] = opt match {
     case None        => EmptyResult
@@ -29,11 +30,11 @@ sealed abstract class Empty extends ServiceResult[Nothing] {
 case object EmptyResult extends Empty
 
 final case class FullResult[+A](value: A) extends ServiceResult[A] {
-  def isValid: Boolean = true
-  def isEmpty: Boolean = false
-  override def getOrElse[B >: A](default: => B): B = value
-  override def map[B](f: A => B): ServiceResult[B] = FullResult(f(value))
-  override def filter(p: A => Boolean): ServiceResult[A] = if (p(value)) this else EmptyResult
+  def isValid: Boolean                                                = true
+  def isEmpty: Boolean                                                = false
+  override def getOrElse[B >: A](default: => B): B                    = value
+  override def map[B](f: A => B): ServiceResult[B]                    = FullResult(f(value))
+  override def filter(p: A => Boolean): ServiceResult[A]              = if (p(value)) this else EmptyResult
   override def flatMap[B](f: A => ServiceResult[B]): ServiceResult[B] = f(value)
 }
 
@@ -45,11 +46,12 @@ case class ErrorMessage(code: String, shortText: Option[String] = None, params: 
 
 object ErrorMessage {
   val InvalidEntityId = ErrorMessage("invalid.entity.id", Some("No matching entity found"))
-  val InvalidAuthOp = ErrorMessage("invalid.auth.op", Some("Authorization faild"))
+  val InvalidAuthOp   = ErrorMessage("invalid.auth.op", Some("Authorization faild"))
 }
 
-sealed case class Failure(failType: FailureType.Value, message: ErrorMessage, exception: Option[Throwable] = None) extends Empty {
+sealed case class Failure(failType: FailureType.Value, message: ErrorMessage, exception: Option[Throwable] = None)
+    extends Empty {
   type A = Nothing
-  override def map[B](f: A => B): ServiceResult[B] = this
+  override def map[B](f: A => B): ServiceResult[B]                    = this
   override def flatMap[B](f: A => ServiceResult[B]): ServiceResult[B] = this
 }

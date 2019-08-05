@@ -20,8 +20,8 @@ object BasicRoutesDefinition {
 }
 
 /**
- * Trait that represents a place where a set of routes for the bookstore app are constructed
- */
+  * Trait that represents a place where a set of routes for the bookstore app are constructed
+  */
 trait BasicRoutesDefinition extends ApiResponseJsonProtocol {
 
   import BasicRoutesDefinition._
@@ -54,9 +54,9 @@ trait BasicRoutesDefinition extends ApiResponseJsonProtocol {
 
       case util.Success(fail: Failure) =>
         val status = fail.failType match {
-          case FailureType.Validation => BadRequest
+          case FailureType.Validation    => BadRequest
           case FailureType.Authorization => Unauthorized
-          case _                      => InternalServerError
+          case _                         => InternalServerError
         }
         val apiResp = ApiResponse[String](ApiResponseMeta(status.intValue, Some(fail.message)))
         complete((status, apiResp))
