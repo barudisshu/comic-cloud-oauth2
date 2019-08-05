@@ -4,7 +4,7 @@ import io.comiccloud.entity.EntityCommand
 
 trait AccountCommand extends EntityCommand
 
-case class CreateAccountCommand(vo: AccountFO) extends AccountCommand {
+case class CreateAccountCommand(vo: AccountInfo) extends AccountCommand {
   override def entityId: String = vo.id
 }
 

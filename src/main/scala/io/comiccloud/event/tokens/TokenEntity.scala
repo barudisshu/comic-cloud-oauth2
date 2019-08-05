@@ -1,8 +1,6 @@
 package io.comiccloud.event.tokens
 
 import akka.actor._
-import akka.cluster.sharding.ShardRegion.Passivate
-import io.comiccloud.entity.PersistentEntity.StopEntity
 import io.comiccloud.entity._
 import io.comiccloud.repository._
 
@@ -16,8 +14,8 @@ object TokenEntity {
   case class CreateValidatedToken(vo: TokenFO)
 }
 
-class TokenEntity(val accountsRepo: AccountsRepository, val clientsRepo: ClientsRepository) extends
-  PersistentEntity[TokenState] with TokenFactory {
+class TokenEntity(val accountsRepo: AccountsRepository,
+                  val clientsRepo: ClientsRepository) extends PersistentEntity[TokenState] with TokenFactory {
 
   import TokenEntity._
 

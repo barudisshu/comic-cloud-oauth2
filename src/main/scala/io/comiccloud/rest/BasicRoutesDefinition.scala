@@ -3,7 +3,7 @@ package io.comiccloud.rest
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{AuthorizationFailedRejection, Route}
 import akka.stream.Materializer
 import akka.util.Timeout
 import spray.json._
@@ -49,9 +49,13 @@ trait BasicRoutesDefinition extends ApiResponseJsonProtocol {
       case util.Success(Failure(FailureType.Validation, ErrorMessage.InvalidEntityId, _)) =>
         complete((NotFound, NotFoundResp))
 
+      case util.Success(Failure(FailureType.Authorization, ErrorMessage.InvalidAuthOp, _)) =>
+        reject(AuthorizationFailedRejection)
+
       case util.Success(fail: Failure) =>
         val status = fail.failType match {
           case FailureType.Validation => BadRequest
+          case FailureType.Authorization => Unauthorized
           case _                      => InternalServerError
         }
         val apiResp = ApiResponse[String](ApiResponseMeta(status.intValue, Some(fail.message)))

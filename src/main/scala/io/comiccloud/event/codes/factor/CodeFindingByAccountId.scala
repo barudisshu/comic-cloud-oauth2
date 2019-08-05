@@ -1,7 +1,7 @@
 package io.comiccloud.event.codes.factor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import io.comiccloud.event.accounts.AccountFO
+import io.comiccloud.event.accounts.AccountInfo
 import io.comiccloud.event.codes.FindCodeRelateAccountIdCommand
 import io.comiccloud.models.Account
 import io.comiccloud.repository.AccountsRepository
@@ -23,7 +23,7 @@ class CodeFindingByAccountId(accountsRepo: AccountsRepository) extends Actor wit
   }
   def findByAccountUid(replyTo: ActorRef): Receive = {
     case Some(account: Account) =>
-      val accountFO = AccountFO(
+      val accountFO = AccountInfo(
         id = account.uid,
         username = account.username,
         password = account.password,

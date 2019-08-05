@@ -38,13 +38,14 @@ final case class FullResult[+A](value: A) extends ServiceResult[A] {
 }
 
 object FailureType extends Enumeration {
-  val Validation, Service = Value
+  val Validation, Service, Authorization = Value
 }
 
 case class ErrorMessage(code: String, shortText: Option[String] = None, params: Option[Map[String, String]] = None)
 
 object ErrorMessage {
   val InvalidEntityId = ErrorMessage("invalid.entity.id", Some("No matching entity found"))
+  val InvalidAuthOp = ErrorMessage("invalid.auth.op", Some("Authorization faild"))
 }
 
 sealed case class Failure(failType: FailureType.Value, message: ErrorMessage, exception: Option[Throwable] = None) extends Empty {
