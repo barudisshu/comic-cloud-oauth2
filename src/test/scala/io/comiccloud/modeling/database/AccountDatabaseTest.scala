@@ -13,6 +13,11 @@ class AccountDatabaseTest extends CassandraSpec with AccountGenerator {
     database.create()
   }
 
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    database.truncate()
+  }
+
   "A Account" should "be inserted into cassandra" in {
     val sample = gen[Account]
     val future = this.store(sample)
@@ -40,7 +45,7 @@ class AccountDatabaseTest extends CassandraSpec with AccountGenerator {
 
         deleted isExhausted () shouldBe true
         deleted wasApplied () shouldBe true
-      this.drop(sample)
+        this.drop(sample)
     }
   }
 
@@ -57,6 +62,28 @@ class AccountDatabaseTest extends CassandraSpec with AccountGenerator {
       res shouldBe defined
       res.get shouldEqual sample
       this.drop(sample)
+    }
+  }
+
+  it should "find accounts by username" in {
+    val sample  = gen[Account]
+    val sample2 = gen[Account]
+    val sample3 = gen[Account]
+
+    val accountByUsername = (for {
+      f1 <- this.store(sample.copy(password = "123"))
+      f2 <- this.store(sample2.copy(password = "456"))
+      f3 <- this.store(sample3.copy(password = "789"))
+    } yield (f1, f2, f3)).flatMap { _ =>
+      database.AccountByUsernameModel.getByAccountUsername("Galudisu")
+    }
+
+    whenReady(accountByUsername) { searchResult =>
+      searchResult shouldBe a[List[_]]
+      searchResult should have length 3
+      this.drop(sample)
+      this.drop(sample2)
+      this.drop(sample3)
     }
   }
 

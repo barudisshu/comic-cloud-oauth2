@@ -12,8 +12,8 @@ trait AccountGenerator {
     override def sample: entity.Account = {
       entity.Account(
         UUIDs.timeBased(),
-        gen[FullName].value,
-        gen[ShortString].value,
+        "Galudisu",
+        "123",
         gen[ShortString].value,
         gen[EmailAddress].value,
         None,

@@ -115,3 +115,6 @@ post localhost:9000/api/access_token
 ```bash
 curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/resources
 ```
+
+
+[secondary index](https://stackoverflow.com/questions/48734670/sasi-index-in-cassandra-and-how-it-differs-from-normal-indexing)

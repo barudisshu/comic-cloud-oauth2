@@ -16,28 +16,21 @@ abstract class AccountModel extends Table[AccountModel, Account] {
     override lazy val name = "id"
   }
 
-  object username   extends StringColumn with Index
+  object username   extends StringColumn
   object password   extends StringColumn
   object salt       extends StringColumn
   object email      extends StringColumn
   object phone      extends OptionalStringColumn
-  object created_at extends DateTimeColumn with ClusteringOrder with Descending
+  object created_at extends DateTimeColumn
 
   def getByAccountId(id: UUID): Future[Option[Account]] = {
     select
       .where(_.id eqs id)
-      .consistencyLevel_=(ConsistencyLevel.ALL)
-      .one()
-  }
-
-  def getByAccountUsername(username: String): Future[Option[Account]] = {
-    select
-      .where(_.username eqs username)
-      .consistencyLevel_=(ConsistencyLevel.ALL)
+      .consistencyLevel_=(ConsistencyLevel.ONE)
       .one()
   }
 
   def deleteById(id: UUID): Future[ResultSet] = {
-    delete.where(_.id eqs id).consistencyLevel_=(ConsistencyLevel.ALL).future()
+    delete.where(_.id eqs id).consistencyLevel_=(ConsistencyLevel.ONE).future()
   }
 }
