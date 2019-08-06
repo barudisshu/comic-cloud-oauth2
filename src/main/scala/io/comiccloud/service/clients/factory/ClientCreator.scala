@@ -22,8 +22,8 @@ class ClientCreator() extends Actor with ActorLogging {
       val client = Client(
         id = UUID.fromString(vo.id),
         owner_id = UUID.fromString(vo.ownerId),
-        appid = vo.clientId,
-        appkey = vo.clientSecret,
+        appid = UUID.fromString(vo.appid),
+        appkey = UUID.fromString(vo.appkey),
         redirect_uri = vo.redirectUri,
         grant_type = vo.grantType,
         created_at = vo.createdAt

@@ -26,8 +26,8 @@ object ClientFO {
 
 case class ClientFO(id: String,
                     ownerId: String,
-                    clientId: String,
-                    clientSecret: String,
+                    appid: String,
+                    appkey: String,
                     redirectUri: Option[String],
                     grantType: String,
                     createdAt: DateTime = DateTime.now(),

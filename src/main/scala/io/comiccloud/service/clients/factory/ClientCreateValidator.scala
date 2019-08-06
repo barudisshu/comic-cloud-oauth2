@@ -36,9 +36,13 @@ private[clients] object ClientCreateValidator {
   case class ResolvedDependencies(inputs: Inputs)           extends InputsData
   case class LookedUpData(inputs: Inputs, client: ClientFO) extends InputsData
 
+  val InvalidClientGrantTypeError = ErrorMessage("client.invalid.grantType", Some("The grant type is not supply"))
   val InvalidClientIdError = ErrorMessage("client.invalid.clientId", Some("You have supplied an invalid client id"))
   val RejectedClientError  = ErrorMessage("client.invalid.rejected", Some("The user does not exists"))
 
+  import io.comiccloud._
+
+  val grantTypes: Seq[String] = Seq(AUTHORIZATION_CODE, CLIENT_CREDENTIALS, PASSWORD, IMPLICIT)
 }
 
 private[clients] class ClientCreateValidator()
@@ -50,6 +54,9 @@ private[clients] class ClientCreateValidator()
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
+    case Event(CreateClientCommand(ClientFO(_,_,_,_,_,grantType,_,_)), _) if !grantTypes.contains(grantType) =>
+      sender() ! Failure(FailureType.Validation, InvalidClientGrantTypeError)
+      stop
     case Event(request: CreateClientCommand, _) =>
       findingByAccountId ! FindClientByAccountIdCommand(request.vo.ownerId)
       goto(ClientHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))

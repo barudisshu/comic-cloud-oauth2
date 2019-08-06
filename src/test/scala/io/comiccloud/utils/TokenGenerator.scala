@@ -2,23 +2,23 @@ package io.comiccloud.utils
 
 import com.datastax.driver.core.utils.UUIDs
 import com.outworkers.util.samplers.Sample
-import com.outworkers.util.testing._
+import com.outworkers.util.testing.{ShortString, gen}
 import io.comiccloud.modeling.entity
-import io.comiccloud.modeling.entity.Account
+import io.comiccloud.modeling.entity.Token
 import org.joda.time.{DateTime, DateTimeZone}
 
-trait AccountGenerator {
-  implicit object AccountGenerator extends Sample[Account] {
-    override def sample: entity.Account = {
-      entity.Account(
+trait TokenGenerator {
+  implicit object TokenGenerator extends Sample[Token] {
+    override def sample: entity.Token = {
+      entity.Token(
         UUIDs.timeBased(),
-        "Galudisu",
-        "123",
+        UUIDs.timeBased(),
+        UUIDs.timeBased(),
         gen[ShortString].value,
-        gen[EmailAddress].value,
         None,
         new DateTime(DateTimeZone.UTC)
       )
     }
   }
+
 }

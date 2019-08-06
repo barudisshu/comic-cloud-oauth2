@@ -8,13 +8,10 @@ import scala.concurrent.Future
 abstract class ClientModel extends Table[ClientModel, Client] {
   override def tableName: String = "client"
 
-  object id extends TimeUUIDColumn with PartitionKey {
-    override lazy val name = "id"
-  }
-
-  object owner_id     extends TimeUUIDColumn
-  object appid        extends StringColumn
-  object appkey       extends StringColumn
+  object id           extends TimeUUIDColumn with PartitionKey
+  object owner_id     extends TimeUUIDColumn with ClusteringOrder
+  object appid        extends TimeUUIDColumn
+  object appkey       extends TimeUUIDColumn
   object redirect_uri extends OptionalStringColumn
   object grant_type   extends StringColumn
   object created_at   extends DateTimeColumn
@@ -24,6 +21,13 @@ abstract class ClientModel extends Table[ClientModel, Client] {
       .where(_.id eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .one()
+  }
+
+  def getByClientIdAndKey(id: UUID, key: UUID): Future[Option[Client]] = {
+    getByClientId(id).map {
+      case Some(c) => if (c.appkey == key) Some(c) else None
+      case None    => None
+    }
   }
 
   def deleteById(id: UUID): Future[ResultSet] = {

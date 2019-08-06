@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.datastax.driver.core.ConsistencyLevel
 import com.outworkers.phantom.dsl._
-import com.outworkers.phantom.keys.PartitionKey
 import io.comiccloud.modeling.entity.Account
 
 import scala.concurrent.Future
@@ -12,10 +11,7 @@ import scala.concurrent.Future
 abstract class AccountModel extends Table[AccountModel, Account] {
   override def tableName: String = "account"
 
-  object id extends TimeUUIDColumn with PartitionKey {
-    override lazy val name = "id"
-  }
-
+  object id         extends TimeUUIDColumn with PartitionKey
   object username   extends StringColumn
   object password   extends StringColumn
   object salt       extends StringColumn

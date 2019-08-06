@@ -3,11 +3,11 @@ package io.comiccloud.modeling.database
 import com.outworkers.phantom.dsl._
 import com.outworkers.util.testing._
 import io.comiccloud.modeling.entity.Account
-import io.comiccloud.utils.{AccountGenerator, CassandraSpec}
+import io.comiccloud.utils.{AccountDbProvider, AccountGenerator, CassandraSpec}
 
 import scala.concurrent.Future
 
-class AccountDatabaseTest extends CassandraSpec with AccountGenerator {
+class AccountDatabaseTest extends CassandraSpec with AccountGenerator with AccountDbProvider {
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     database.create()

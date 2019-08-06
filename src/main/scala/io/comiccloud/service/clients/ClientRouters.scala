@@ -32,8 +32,8 @@ class ClientRouters(clientRef: ActorRef)(implicit val ec: ExecutionContext) exte
             val vo = ClientFO(
               id = id,
               ownerId = request.accountId,
-              clientId = Hashes.randomMd5().toString,
-              clientSecret = Hashes.randomMd5().toString,
+              appid = id,
+              appkey = UUIDs.timeBased().toString,
               grantType = request.grantType,
               redirectUri = request.redirectUri
             )
