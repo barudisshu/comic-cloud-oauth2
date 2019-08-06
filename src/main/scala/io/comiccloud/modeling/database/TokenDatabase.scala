@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class TokenDatabase(override val connector: CassandraConnection) extends Database[TokenDatabase](connector) {
-  object TokenModel extends TokenModel with connector.Connector
+  object TokenModel  extends TokenModel with connector.Connector
 
   def saveOrUpdate(token: Token, ttl: FiniteDuration = 1 days): Future[ResultSet] = {
     Batch.logged
@@ -20,7 +20,7 @@ class TokenDatabase(override val connector: CassandraConnection) extends Databas
 
   def delete(token: Token): Future[ResultSet] = {
     Batch.logged
-      .add(TokenModel.delete.where(_.id eqs token.id))
+      .add(TokenModel.delete.where(_.access_token eqs token.access_token))
       .future()
   }
 }

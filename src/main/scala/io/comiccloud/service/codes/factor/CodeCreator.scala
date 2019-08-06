@@ -21,7 +21,6 @@ class CodeCreator() extends Actor with ActorLogging {
   override def receive: Receive = {
     case CreateCodeCommand(vo) =>
       val code = Code(
-        id = UUID.fromString(vo.id),
         account_id = UUID.fromString(vo.accountId),
         appid = UUID.fromString(vo.appid),
         code = vo.code,

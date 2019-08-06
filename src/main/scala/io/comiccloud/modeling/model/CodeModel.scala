@@ -6,25 +6,24 @@ import io.comiccloud.modeling.entity.Code
 import scala.concurrent.Future
 
 abstract class CodeModel extends Table[CodeModel, Code] {
-  override def tableName: String = "authorization_code"
+  override def tableName: String = "code"
 
-  object id extends TimeUUIDColumn with PartitionKey
   object account_id extends TimeUUIDColumn with ClusteringOrder
   object appid extends TimeUUIDColumn with ClusteringOrder
-  object code extends StringColumn
+  object code extends StringColumn with PartitionKey
   object redirect_uri extends OptionalStringColumn
   object created_at extends DateTimeColumn
 
-  def getById(id: UUID): Future[Option[Code]] = {
+  def getById(id: String): Future[Option[Code]] = {
     select
-      .where(_.id eqs id)
+      .where(_.code eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .one()
   }
 
-  def deleteById(id: UUID): Future[ResultSet] = {
+  def deleteById(id: String): Future[ResultSet] = {
     delete
-      .where(_.id eqs id)
+      .where(_.code eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .future()
   }

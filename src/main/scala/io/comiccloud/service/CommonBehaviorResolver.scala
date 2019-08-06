@@ -47,7 +47,7 @@ trait CommonBehaviorResolver {
     val trans: Receive = {
       case Some(client: Client) =>
         val clientFO = ClientFO(
-          id = client.id.toString,
+          id = client.appid.toString,
           ownerId = client.owner_id.toString,
           appid = client.appid.toString,
           appkey = client.appkey.toString,

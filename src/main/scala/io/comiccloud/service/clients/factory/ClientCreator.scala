@@ -20,7 +20,6 @@ class ClientCreator() extends Actor with ActorLogging {
   override def receive: Receive = {
     case CreateClientCommand(vo) =>
       val client = Client(
-        id = UUID.fromString(vo.id),
         owner_id = UUID.fromString(vo.ownerId),
         appid = UUID.fromString(vo.appid),
         appkey = UUID.fromString(vo.appkey),

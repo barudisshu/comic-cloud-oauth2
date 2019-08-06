@@ -23,6 +23,6 @@ class AccountFinder() extends Actor with ActorLogging with CommonBehaviorResolve
 
     case FindAccountByUsernameCommand(_, username) =>
       context become resolveFindingAccountById(sender)
-      AccountDatabase.AccountByUsernameModel.getByAccountUsername(username).map(_.headOption) pipeTo self
+      AccountDatabase.AccountModel.getByAccountUsername(username).map(_.headOption) pipeTo self
   }
 }

@@ -13,7 +13,6 @@ trait CodeGenerator {
       entity.Code(
         UUIDs.timeBased(),
         UUIDs.timeBased(),
-        UUIDs.timeBased(),
         gen[ShortString].value,
         None,
         new DateTime(DateTimeZone.UTC)

@@ -8,9 +8,8 @@ import scala.concurrent.Future
 abstract class ClientModel extends Table[ClientModel, Client] {
   override def tableName: String = "client"
 
-  object id           extends TimeUUIDColumn with PartitionKey
-  object owner_id     extends TimeUUIDColumn with ClusteringOrder
-  object appid        extends TimeUUIDColumn
+  object owner_id     extends TimeUUIDColumn with PartitionKey
+  object appid        extends TimeUUIDColumn with PartitionKey
   object appkey       extends TimeUUIDColumn
   object redirect_uri extends OptionalStringColumn
   object grant_type   extends StringColumn
@@ -18,7 +17,7 @@ abstract class ClientModel extends Table[ClientModel, Client] {
 
   def getByClientId(id: UUID): Future[Option[Client]] = {
     select
-      .where(_.id eqs id)
+      .where(_.appid eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .one()
   }
@@ -32,7 +31,7 @@ abstract class ClientModel extends Table[ClientModel, Client] {
 
   def deleteById(id: UUID): Future[ResultSet] = {
     delete
-      .where(_.id eqs id)
+      .where(_.appid eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .future()
   }

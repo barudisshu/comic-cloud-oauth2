@@ -13,9 +13,8 @@ trait TokenGenerator {
       entity.Token(
         UUIDs.timeBased(),
         UUIDs.timeBased(),
-        UUIDs.timeBased(),
         gen[ShortString].value,
-        None,
+        gen[ShortString].value,
         new DateTime(DateTimeZone.UTC)
       )
     }

@@ -14,7 +14,6 @@ trait ClientGenerator {
         UUIDs.timeBased(),
         UUIDs.timeBased(),
         UUIDs.timeBased(),
-        UUIDs.timeBased(),
         None,
         "authorization_code",
         new DateTime(DateTimeZone.UTC)

@@ -1,64 +1,46 @@
-drop keyspace if exists comic;
-CREATE KEYSPACE IF NOT EXISTS comic WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1': '1'} AND durable_writes = true;
+DROP KEYSPACE IF EXISTS comic;
+CREATE KEYSPACE comic WITH REPLICATION = { 'class' : 'org.apache.cassandra.locator.NetworkTopologyStrategy', 'datacenter1': '1' } AND DURABLE_WRITES = true;
 
-use comic;
-
-drop table if exists account;
-create table account
+CREATE TABLE comic.account
 (
-    id         uuid,
-    username   varchar,
-    password   varchar,
-    salt       varchar,
-    email      varchar,
-    phone      varchar,
-    created_at date,
-    primary key ( id, created_at )
-) with clustering order by (created_at DESC)
-      and caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
-      and compaction = { 'class': 'org.apache.cassandra.db.compaction.LeveledCompactionStrategy' };
+    id         timeuuid,
+    username   text,
+    "password" text,
+    email      text,
+    phone      text,
+    salt       text,
+    created_at timestamp,
+    PRIMARY KEY ((id, username))
+);
 
-drop table if exists client;
-create table client
+CREATE TABLE comic.client
 (
-    id           uuid,
-    owner_id     uuid,
-    appid        varchar,
-    appkey       varchar,
-    redirect_uri varchar,
-    grant_type   varchar,
-    created_at   date,
-    primary key ( id, created_at )
-) with clustering order by (created_at DESC)
-      and caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
-      and compaction = { 'class': 'org.apache.cassandra.db.compaction.LeveledCompactionStrategy' };
+    appid        timeuuid,
+    owner_id     timeuuid,
+    appkey       timeuuid,
+    grant_type   text,
+    redirect_uri text,
+    created_at   timestamp,
+    PRIMARY KEY ((appid, owner_id))
+);
 
-drop table if exists access_token;
-create table access_token
+CREATE TABLE comic.code
 (
-    id            uuid,
-    account_id    uuid,
-    appid         varchar,
-    access_token  varchar,
-    refresh_token varchar,
-    created_at    date,
-    primary key ( id, created_at )
-) with clustering order by (created_at DESC)
-      and caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
-      and compaction = { 'class': 'org.apache.cassandra.db.compaction.LeveledCompactionStrategy' };
+    account_id   timeuuid,
+    appid        timeuuid,
+    code         text,
+    redirect_uri text,
+    created_at   timestamp,
+    PRIMARY KEY (account_id, appid)
+);
 
-drop table if exists authorization_code;
-create table authorization_code
+
+CREATE TABLE comic.access_token
 (
-    id           uuid,
-    account_id   uuid,
-    appid        varchar,
-    code         varchar,
-    redirect_uri varchar,
-    created_at   date,
-    primary key ( id, created_at )
-) with clustering order by (created_at DESC)
-      and caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
-      and compaction = { 'class': 'org.apache.cassandra.db.compaction.LeveledCompactionStrategy' };
-
-
+    account_id    timeuuid,
+    appid         timeuuid,
+    access_token  text,
+    refresh_token text,
+    created_at    timestamp,
+    PRIMARY KEY ((account_id, appid), access_token, refresh_token)
+) with clustering order by (access_token desc, refresh_token desc);

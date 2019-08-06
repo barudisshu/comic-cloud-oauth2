@@ -43,7 +43,8 @@ class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extend
               accountId = UUIDs.timeBased().toString,
               appid = request.appid,
               appkey = request.appkey,
-              token = Hashes.randomSha256().toString
+              token = Hashes.randomSha256().toString,
+              refreshToken = Hashes.randomSha256().toString
             )
             val command = CreateClientCredentialTokenCommand(vo)
             serviceAndComplete[TokenPair](command, tokenRef)

@@ -12,7 +12,7 @@ abstract class AccountModel extends Table[AccountModel, Account] {
   override def tableName: String = "account"
 
   object id         extends TimeUUIDColumn with PartitionKey
-  object username   extends StringColumn
+  object username   extends StringColumn with PartitionKey
   object password   extends StringColumn
   object salt       extends StringColumn
   object email      extends StringColumn
@@ -24,6 +24,13 @@ abstract class AccountModel extends Table[AccountModel, Account] {
       .where(_.id eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .one()
+  }
+
+  def getByAccountUsername(username: String): Future[List[Account]] = {
+    select
+      .where(_.username eqs username)
+      .consistencyLevel_=(ConsistencyLevel.ONE)
+      .fetch()
   }
 
   def deleteById(id: UUID): Future[ResultSet] = {

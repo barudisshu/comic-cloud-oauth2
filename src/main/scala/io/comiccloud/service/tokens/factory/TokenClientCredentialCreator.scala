@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import io.comiccloud.modeling.database.TokenDatabase
 import io.comiccloud.modeling.entity.Token
-import io.comiccloud.rest.{EmptyResult, FullResult}
+import io.comiccloud.rest._
 import io.comiccloud.service.tokens.{CreateValidatedClientCredentialTokenCommand, TokenPair}
 
 private[tokens] object TokenClientCredentialCreator {
@@ -18,7 +18,6 @@ class TokenClientCredentialCreator() extends Actor with ActorLogging {
   override def receive: Receive = {
     case CreateValidatedClientCredentialTokenCommand(vo) =>
       val token = Token(
-        id = UUID.fromString(vo.id),
         account_id = UUID.fromString(vo.accountId),
         appid = UUID.fromString(vo.appid),
         access_token = vo.token,
@@ -36,7 +35,7 @@ class TokenClientCredentialCreator() extends Actor with ActorLogging {
       self ! PoisonPill
 
     case f: akka.actor.Status.Failure =>
-      replyTo ! EmptyResult
+      replyTo ! Failure(FailureType.Service, ErrorMessage("500", Some(s"db exception: ${f.cause.getLocalizedMessage}")))
       context stop self
     case None =>
       replyTo ! EmptyResult
