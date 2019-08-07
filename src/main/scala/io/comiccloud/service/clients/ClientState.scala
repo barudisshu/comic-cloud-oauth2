@@ -21,7 +21,7 @@ case class ClientInitialState(id: String, deleted: Boolean = false) extends Clie
 
 object ClientFO {
   def empty                                     = ClientFO("", "", "", "", None, "")
-  implicit val format: RootJsonFormat[ClientFO] = jsonFormat8(ClientFO.apply)
+  implicit val format: RootJsonFormat[ClientFO] = jsonFormat9(ClientFO.apply)
 }
 
 case class ClientFO(id: String,
@@ -31,6 +31,7 @@ case class ClientFO(id: String,
                     redirectUri: Option[String],
                     grantType: String,
                     createdAt: DateTime = DateTime.now(),
+                    expiredAt: DateTime = DateTime.now(),
                     deleted: Boolean = false)
     extends ClientState {
   override def assignId(id: String): ClientState = this.copy(id)

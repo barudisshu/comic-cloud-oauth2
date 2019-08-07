@@ -8,6 +8,8 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
 import spray.json._
 
+import scala.concurrent.duration.FiniteDuration
+
 /**
   * Root json protocol class for others to extend from
   */
@@ -57,6 +59,18 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     override def read(json: JsValue): DateTime = json match {
       case JsString(s) => parserISO.parseDateTime(s)
       case _           => throw DeserializationException("Error info you want here ...")
+    }
+  }
+  implicit object FiniteDurationJsonFormat extends RootJsonFormat[FiniteDuration] {
+    def write(dur: FiniteDuration) = JsObject(
+      "length" -> JsNumber(dur.length),
+      "unit"   -> JsString(dur.unit.toString)
+    )
+    def read(value: JsValue): FiniteDuration = {
+      value.asJsObject.getFields("length", "unit") match {
+        case Seq(JsNumber(length), JsString(unit)) => FiniteDuration(length.toLong, unit.toLowerCase)
+        case _                                     => deserializationError("FiniteDuration expected")
+      }
     }
   }
 }

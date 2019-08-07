@@ -8,7 +8,7 @@ import scala.concurrent.Future
 abstract class ClientModel extends Table[ClientModel, Client] {
   override def tableName: String = "client"
 
-  object owner_id     extends TimeUUIDColumn with PartitionKey
+  object owner_id     extends TimeUUIDColumn with ClusteringOrder
   object appid        extends TimeUUIDColumn with PartitionKey
   object appkey       extends TimeUUIDColumn
   object redirect_uri extends OptionalStringColumn

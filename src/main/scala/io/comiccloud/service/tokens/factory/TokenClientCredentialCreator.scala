@@ -22,7 +22,8 @@ class TokenClientCredentialCreator() extends Actor with ActorLogging {
         appid = UUID.fromString(vo.appid),
         access_token = vo.token,
         refresh_token = vo.refreshToken,
-        created_at = vo.createdAt
+        created_at = vo.createdAt,
+        expired_at = vo.expiredAt
       )
 
       context become feedback(sender)
