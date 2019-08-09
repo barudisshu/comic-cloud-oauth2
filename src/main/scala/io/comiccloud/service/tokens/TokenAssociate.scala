@@ -13,7 +13,7 @@ class TokenAssociate() extends Aggregate[TokenState, TokenEntity] {
   override def entityProps: Props = TokenEntity.props()
 
   override def receive: Receive = {
-    case command: CreateClientCredentialTokenCommand =>
+    case command: CreateClientCredentialsTokenCommand =>
       forwardCommand(command)
   }
 }

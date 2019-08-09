@@ -81,9 +81,12 @@ class ResourceCredentialHandler()
 
   when(ClientMaintain, 5 seconds) {
     case Event(FullResult(client: Client), data @ ResolvedDependencies(inputs)) =>
-      data.copy(inputs = inputs.copy(client = client))
+      val finalData = data.copy(inputs = inputs.copy(client = client))
       context.parent
-        .tell(HandleResourceInfo(data.inputs.token, data.inputs.account, data.inputs.client), data.inputs.originator)
+        .tell(HandleResourceInfo(
+          finalData.inputs.token,
+          finalData.inputs.account,
+          finalData.inputs.client), finalData.inputs.originator)
       stop
     case Event(EmptyResult, data: ResolvedDependencies) =>
       context.parent.tell(HandleResourceClientMissing, data.inputs.originator)

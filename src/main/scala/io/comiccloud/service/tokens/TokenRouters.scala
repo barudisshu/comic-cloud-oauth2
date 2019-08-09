@@ -46,7 +46,7 @@ class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extend
               token = Hashes.randomSha256().toString,
               refreshToken = Hashes.randomSha256().toString
             )
-            val command = CreateClientCredentialTokenCommand(vo)
+            val command = CreateClientCredentialsTokenCommand(vo)
             serviceAndComplete[TokenPair](command, tokenRef)
           }
         }

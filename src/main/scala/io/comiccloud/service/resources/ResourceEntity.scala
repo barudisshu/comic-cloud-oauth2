@@ -22,15 +22,16 @@ class ResourceEntity() extends PersistentEntity[ResourceState] with ResourceFact
 
   override def additionalCommandHandling: Receive = {
     case o: CredentialsDeliverCommand =>
+      state = o.vo
       resourceCredential.forward(o)
 
-    case h@ HandleResourceTokenMissing =>
+    case h @ HandleResourceTokenMissing =>
       resourceComposer.forward(h)
 
-    case h@ HandleResourceAccountMissing =>
+    case h @ HandleResourceAccountMissing =>
       resourceComposer.forward(h)
 
-    case h@ HandleResourceClientMissing =>
+    case h @ HandleResourceClientMissing =>
       resourceComposer.forward(h)
 
     case h: HandleResourceInfo =>

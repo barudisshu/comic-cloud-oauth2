@@ -5,8 +5,6 @@ import io.comiccloud.rest.ServiceProtocol._
 import org.joda.time.DateTime
 import spray.json.RootJsonFormat
 
-import scala.concurrent.duration.FiniteDuration
-
 trait ResourceState extends EntityFieldsObject[String, ResourceState]
 
 object ResourceInitialState {

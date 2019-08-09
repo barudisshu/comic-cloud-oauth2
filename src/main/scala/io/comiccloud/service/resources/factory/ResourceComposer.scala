@@ -31,7 +31,7 @@ class ResourceComposer() extends Actor with ActorLogging {
         redirectUri = client.redirect_uri,
         expiredAt = token.expired_at
       )
-      sender() ! resourceFO
+      sender() ! Some(resourceFO)
       self ! PoisonPill
   }
 }

@@ -77,8 +77,7 @@ abstract class PersistentEntity[FO <: EntityFieldsObject[String, FO]: ClassTag]
   }
 
   def isAcceptingCommand(cmd: Any): Boolean =
-    !state.deleted &&
-      !(state == initialState && !isCreateMessage(cmd))
+    !state.deleted && !(state == initialState && !isCreateMessage(cmd))
 
   def additionalCommandHandling: Receive
 

@@ -6,17 +6,17 @@ import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import io.comiccloud.modeling.database.TokenDatabase
 import io.comiccloud.modeling.entity.Token
 import io.comiccloud.rest._
-import io.comiccloud.service.tokens.{CreateValidatedClientCredentialTokenCommand, TokenPair}
+import io.comiccloud.service.tokens.{CreateValidatedTokenCommand, TokenPair}
 
-private[tokens] object TokenClientCredentialCreator {
-  def props(): Props = Props(new TokenClientCredentialCreator())
+private[tokens] object TokenValidatedCreator {
+  def props(): Props = Props(new TokenValidatedCreator())
 }
 
-class TokenClientCredentialCreator() extends Actor with ActorLogging {
+class TokenValidatedCreator() extends Actor with ActorLogging {
   import akka.pattern.pipe
   import context.dispatcher
   override def receive: Receive = {
-    case CreateValidatedClientCredentialTokenCommand(vo) =>
+    case CreateValidatedTokenCommand(vo) =>
       val token = Token(
         account_id = UUID.fromString(vo.accountId),
         appid = UUID.fromString(vo.appid),

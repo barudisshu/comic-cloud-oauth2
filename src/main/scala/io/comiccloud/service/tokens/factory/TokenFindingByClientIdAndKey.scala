@@ -7,11 +7,11 @@ import io.comiccloud.modeling.database.ClientDatabase
 import io.comiccloud.service.CommonBehaviorResolver
 import io.comiccloud.service.tokens.FindTokenRelateClientCommand
 
-private[tokens] object TokenFindingByClient {
-  def props(): Props = Props(new TokenFindingByClient())
+private[tokens] object TokenFindingByClientIdAndKey {
+  def props(): Props = Props(new TokenFindingByClientIdAndKey())
 }
 
-class TokenFindingByClient() extends Actor with ActorLogging with CommonBehaviorResolver {
+class TokenFindingByClientIdAndKey() extends Actor with ActorLogging with CommonBehaviorResolver {
   import akka.pattern.pipe
   import context.dispatcher
   override def receive: Receive = {

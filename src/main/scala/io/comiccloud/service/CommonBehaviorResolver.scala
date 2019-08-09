@@ -1,10 +1,11 @@
 package io.comiccloud.service
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
-import io.comiccloud.modeling.entity.{Account, Client}
-import io.comiccloud.rest.{EmptyResult, FullResult}
+import io.comiccloud.modeling.entity.{Account, Client, Code}
+import io.comiccloud.rest._
 import io.comiccloud.service.accounts.AccountFO
 import io.comiccloud.service.clients.ClientFO
+import io.comiccloud.service.codes.CodeFO
 
 /**
   * the resolver one-to-one correspondence the cassandra query modeling
@@ -18,10 +19,13 @@ trait CommonBehaviorResolver {
   private def resolveUnhandled(replyTo: ActorRef): Receive = {
     case f: akka.actor.Status.Failure =>
       log.debug("{}", f.cause.getMessage)
-      replyTo ! EmptyResult
+      replyTo ! Failure(FailureType.Service, ErrorMessage("401", Some(s"db exception: ${f.cause.getLocalizedMessage}")))
       context stop self
     case None =>
       replyTo ! EmptyResult
+      context stop self
+    case it =>
+      replyTo ! Failure(FailureType.Service, ErrorMessage("500", Some(s"unhandled receive message: $it")))
       context stop self
   }
 
@@ -56,6 +60,23 @@ trait CommonBehaviorResolver {
           createdAt = client.created_at
         )
         replyTo ! FullResult(clientFO)
+        self ! PoisonPill
+    }
+    trans orElse resolveUnhandled(replyTo)
+  }
+
+  def resolveFindingCodeById(replyTo: ActorRef): Receive = {
+    val trans: Receive = {
+      case Some(code: Code) =>
+        val codeFO = CodeFO(
+          id = code.code,
+          accountId = code.account_id.toString,
+          appid = code.appid.toString,
+          redirectUri = code.redirect_uri,
+          code = code.code,
+          createdAt = code.created_at
+        )
+        replyTo ! FullResult(codeFO)
         self ! PoisonPill
     }
     trans orElse resolveUnhandled(replyTo)

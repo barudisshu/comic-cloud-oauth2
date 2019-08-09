@@ -1,16 +1,15 @@
-package io.comiccloud.service.tokens.factory
+package io.comiccloud.service.tokens.factory.credentials
 
 import akka.actor.{ActorRef, FSM, Props}
 import io.comiccloud.rest._
 import io.comiccloud.service.clients.ClientFO
 import io.comiccloud.service.tokens._
-import io.comiccloud.service.tokens.factory.TokenClientCredentialCreateValidator._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-object TokenClientCredentialCreateValidator {
-  def props(): Props =    Props(new TokenClientCredentialCreateValidator())
+object TokenClientCredentialsCreateValidator {
+  def props(): Props =    Props(new TokenClientCredentialsCreateValidator())
 
   sealed trait State
   case object WaitingForRequest extends State
@@ -24,7 +23,7 @@ object TokenClientCredentialCreateValidator {
   case object NoData extends Data {
     def inputs = Inputs(ActorRef.noSender, null)
   }
-  case class Inputs(originator: ActorRef, request: CreateClientCredentialTokenCommand)
+  case class Inputs(originator: ActorRef, request: CreateClientCredentialsTokenCommand)
   trait InputsData extends Data {
     def inputs: Inputs
     def originator: ActorRef = inputs.originator
@@ -41,26 +40,27 @@ object TokenClientCredentialCreateValidator {
 
 }
 
-private[tokens] class TokenClientCredentialCreateValidator() extends
-  FSM[TokenClientCredentialCreateValidator.State, TokenClientCredentialCreateValidator.Data] with TokenFactory {
+private[tokens] class TokenClientCredentialsCreateValidator() extends
+  FSM[TokenClientCredentialsCreateValidator.State, TokenClientCredentialsCreateValidator.Data] with TokenFactory {
+
+  import TokenClientCredentialsCreateValidator._
 
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
-    case Event(request: CreateClientCredentialTokenCommand, _) =>
+    case Event(request: CreateClientCredentialsTokenCommand, _) =>
       findingByClientId ! FindTokenRelateClientCommand(request.vo.appid, request.vo.appkey)
       goto(TokenHasRespondedAccount) using ResolvedDependencies(Inputs(sender, request))
   }
 
   when(TokenHasRespondedAccount, 5 seconds) {
     case Event(FullResult(clientFO: ClientFO), data@ResolvedDependencies(inputs)) =>
-      context.parent.tell(CreateValidatedClientCredentialTokenCommand(inputs.request.vo.copy(accountId = clientFO.ownerId)), data.inputs.originator)
+      context.parent.tell(CreateValidatedTokenCommand(inputs.request.vo.copy(accountId = clientFO.ownerId)), data.inputs.originator)
       stop
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the client")
       data.originator ! Failure(FailureType.Validation, InvalidClientIdError)
       stop
-
   }
 
   whenUnhandled {
