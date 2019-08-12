@@ -2,6 +2,7 @@ package io.comiccloud.service.resources.factory
 
 import akka.actor.{Actor, ActorLogging, PoisonPill, Props}
 import com.datastax.driver.core.utils.UUIDs
+import io.comiccloud.rest.{ErrorMessage, Failure, FailureType, FullResult}
 import io.comiccloud.service.resources.ResourceEntity._
 import io.comiccloud.service.resources.ResourceFO
 
@@ -10,15 +11,17 @@ object ResourceComposer {
 }
 class ResourceComposer() extends Actor with ActorLogging {
 
+  val missingToken = Failure(FailureType.Authorization, ErrorMessage("Token not found, maybe it's expired"))
+
   override def receive: Receive = {
     case HandleResourceTokenMissing =>
-      sender() ! None
+      sender() ! missingToken
       self ! PoisonPill
     case HandleResourceAccountMissing =>
-      sender() ! None
+      sender() ! missingToken
       self ! PoisonPill
     case HandleResourceClientMissing =>
-      sender() ! None
+      sender() ! missingToken
       self ! PoisonPill
     case HandleResourceInfo(token, account, client) =>
       val resourceFO = ResourceFO(
@@ -31,7 +34,7 @@ class ResourceComposer() extends Actor with ActorLogging {
         redirectUri = client.redirect_uri,
         expiredAt = token.expired_at
       )
-      sender() ! Some(resourceFO)
+      sender() ! FullResult(resourceFO)
       self ! PoisonPill
   }
 }
