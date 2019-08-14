@@ -13,6 +13,6 @@ class CodeAssociate() extends Aggregate[CodeState, CodeEntity] {
   override def entityProps: Props = CodeEntity.props()
   override def receive: Receive = {
     case command: CreateCodeCommand =>
-      forwardCommand(command)
+      forwardCommandWithoutSharding(command)
   }
 }

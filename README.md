@@ -1,8 +1,6 @@
 Akka based oauth2 
 =================
 
-
-
 仅token和code才需要sharding region，其它领域实体不需要
 
 ## 创建用户
@@ -48,17 +46,6 @@ put localhost:9000/api/code
 }
 ```
 
-## 获取Code信息
-
-1. 每读取一次code，这个实体应该变为passivation
-2. 读取的code信息，会作为协作域，用于生成有效的token
-
-首次获取生效，再次获取变更为404。
-
-```
-get localhost:9000/api/code/6a734
-```
-
 ## 产生token
 
 1. 由appid和appkey产生，客户端模式，不包含重定向地址
@@ -90,10 +77,10 @@ post localhost:9000/api/token
 ```
 post localhost:9000/api/token
 {
-    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
-    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
+    "appid": "d9c28170-be68-11e9-b4e3-d3b42412204e",
+    "appkey": "d9c28171-be68-11e9-b4e3-d3b42412204e",
     "username": "galudisu",
-    "password": "XFFkla!2",
+    "password": "$ea(oo2!f",
     "grant_type": "password"
 }
 ```
@@ -103,18 +90,14 @@ post localhost:9000/api/token
 ```
 post localhost:9000/api/token
 {
-    "appid": "8a70c2923877f4caf6ab45538457c5d628e6bce0",
-    "appkey": "3aa585d12085692348199b5227727bbc2c42a395",
-    "refreshToken": "ejpxxklakfalkd.......",
-    "grant_type": "refresh_token",
-}
-```
+    "appid": "d9c28170-be68-11e9-b4e3-d3b42412204e",
+    "appkey": "d9c28171-be68-11e9-b4e3-d3b42412204e",
+    "refresh_token": "665cad90-be7d-11e9-ae62-d350c56ae498",
+    "grant_type": "refresh_token"
+}```
 
 ## 统一资源入口
 
 ```bash
 curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/resources
 ```
-
-
-[secondary index](https://stackoverflow.com/questions/48734670/sasi-index-in-cassandra-and-how-it-differs-from-normal-indexing)

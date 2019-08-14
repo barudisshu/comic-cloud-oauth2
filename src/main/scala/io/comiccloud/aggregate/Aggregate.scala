@@ -10,7 +10,7 @@ abstract class Aggregate[FO <: EntityFieldsObject[String, FO], E <: PersistentEn
 
   val idExtractor = PersistentEntity.PersistentEntityIdExtractor(context.system)
 
-  val entityShardingRegion: ActorRef =
+  lazy val entityShardingRegion: ActorRef =
     ClusterSharding(context.system).start(
       typeName = entityName,
       entityProps = entityProps,
@@ -28,4 +28,7 @@ abstract class Aggregate[FO <: EntityFieldsObject[String, FO], E <: PersistentEn
 
   def forwardCommand(command: EntityCommand): Unit =
     entityShardingRegion.forward(command)
+
+  def forwardCommandWithoutSharding(command: EntityCommand): Unit =
+    context.actorOf(entityProps).forward(command)
 }

@@ -14,6 +14,15 @@ class TokenAssociate() extends Aggregate[TokenState, TokenEntity] {
 
   override def receive: Receive = {
     case command: CreateClientCredentialsTokenCommand =>
-      forwardCommand(command)
+      forwardCommandWithoutSharding(command)
+
+    case command: CreateAuthorizationCodeTokenCommand =>
+      forwardCommandWithoutSharding(command)
+
+    case command: CreatePasswordTokenCommand =>
+      forwardCommandWithoutSharding(command)
+
+    case command: CreateRefreshTokenCommand =>
+      forwardCommandWithoutSharding(command)
   }
 }

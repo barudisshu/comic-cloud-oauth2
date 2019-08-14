@@ -15,6 +15,7 @@ case class CodeInitialState(id: String, deleted: Boolean = false) extends CodeSt
   override def assignId(id: String): CodeState = this.copy(id)
   override def markDeleted: CodeState          = this
 }
+
 object CodeFO {
   def empty                                   = CodeFO("", "", "", None, "")
   implicit val format: RootJsonFormat[CodeFO] = jsonFormat7(CodeFO.apply)
@@ -39,6 +40,11 @@ object CodeReadyFO {
 case class CodeReadyFO(id: String, deleted: Boolean = false) extends CodeState {
   override def assignId(id: String): CodeState = this.copy(id)
   override def markDeleted: CodeState          = this
+}
+
+case class CodeDeleteFO(id: String, deleted: Boolean = true) extends CodeState {
+  override def assignId(id: String): CodeState = this.copy(id)
+  override def markDeleted: CodeState = this
 }
 
 object CodeTokenFO {

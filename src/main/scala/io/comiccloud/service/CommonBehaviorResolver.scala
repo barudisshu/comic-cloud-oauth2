@@ -1,11 +1,14 @@
 package io.comiccloud.service
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
-import io.comiccloud.modeling.entity.{Account, Client, Code}
+import com.datastax.driver.core.utils.UUIDs
+import com.outworkers.phantom.ResultSet
+import io.comiccloud.modeling.entity.{Account, Client, Code, Token}
 import io.comiccloud.rest._
 import io.comiccloud.service.accounts.AccountFO
 import io.comiccloud.service.clients.ClientFO
-import io.comiccloud.service.codes.CodeFO
+import io.comiccloud.service.codes.{CodeDeleteFO, CodeFO}
+import io.comiccloud.service.tokens.{TokenDeleteFO, TokenFO}
 
 /**
   * the resolver one-to-one correspondence the cassandra query modeling
@@ -80,6 +83,51 @@ trait CommonBehaviorResolver {
         self ! PoisonPill
     }
     trans orElse resolveUnhandled(replyTo)
+  }
+
+  def resolveFindingRefreshById(clientFO: ClientFO, replyTo: ActorRef): Receive = {
+    val trans: Receive = {
+      case Some(code: Token) =>
+        val id = UUIDs.timeBased().toString
+        val tokenFO = TokenFO(
+          id = id,
+          accountId = code.account_id.toString,
+          appid = clientFO.appid,
+          appkey = clientFO.appkey,
+          token = id,
+          refreshToken = UUIDs.timeBased().toString
+        )
+        replyTo ! FullResult(tokenFO)
+        self ! PoisonPill
+    }
+    trans orElse resolveUnhandled(replyTo)
+
+  }
+
+  def resolveDeletingCodeById(code: String, replyTo: ActorRef): Receive = {
+    val trans: Receive = {
+      case rs: ResultSet if rs.isFullyFetched() && rs.isExhausted() =>
+        replyTo ! FullResult(CodeDeleteFO(code))
+        self ! PoisonPill
+      case rs: ResultSet =>
+        replyTo ! EmptyResult
+      self ! PoisonPill
+    }
+    trans orElse resolveUnhandled(replyTo)
+
+  }
+
+  def resolveDeletingAccessToken(accessToken: String, replyTo: ActorRef): Receive = {
+    val trans: Receive = {
+      case rs: ResultSet if rs.isFullyFetched() && rs.isExhausted() =>
+        replyTo ! FullResult(TokenDeleteFO(accessToken))
+        self ! PoisonPill
+      case rs: ResultSet =>
+        replyTo ! EmptyResult
+        self ! PoisonPill
+    }
+    trans orElse resolveUnhandled(replyTo)
+
   }
 
 }

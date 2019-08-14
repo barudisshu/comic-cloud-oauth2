@@ -12,6 +12,6 @@ class ResourceAssociate() extends Aggregate[ResourceState, ResourceEntity] {
   override def entityProps: Props = ResourceEntity.props()
   override def receive: Receive = {
     case command: CredentialsDeliverCommand =>
-      forwardCommand(command)
+      forwardCommandWithoutSharding(command)
   }
 }

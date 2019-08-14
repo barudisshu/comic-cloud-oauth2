@@ -13,9 +13,9 @@ class AccountAssociate() extends Aggregate[AccountState, AccountEntity] {
 
   override def receive: Receive = {
     case command: CreateAccountCommand =>
-      forwardCommand(command)
+      forwardCommandWithoutSharding(command)
 
     case command: FindAccountByIdCommand =>
-      forwardCommand(command)
+      forwardCommandWithoutSharding(command)
   }
 }

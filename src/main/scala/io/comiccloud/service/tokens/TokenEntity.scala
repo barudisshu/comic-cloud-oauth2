@@ -18,11 +18,19 @@ class TokenEntity() extends PersistentEntity[TokenState] with TokenFactory {
 
   override def additionalCommandHandling: Receive = {
     case o: CreateClientCredentialsTokenCommand =>
-      clientCredential.forward(o)
+      clientCredentials.forward(o)
       state = CreatedValidationFO.validation
 
     case o: CreateAuthorizationCodeTokenCommand =>
       authorizationCode.forward(o)
+      state = CreatedValidationFO.validation
+
+    case o: CreatePasswordTokenCommand =>
+      password.forward(o)
+      state = CreatedValidationFO.validation
+
+    case o: CreateRefreshTokenCommand =>
+      refreshToken.forward(o)
       state = CreatedValidationFO.validation
 
     // create token directly

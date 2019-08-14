@@ -33,6 +33,13 @@ class TokenDatabase(override val connector: CassandraConnection) extends Databas
       .add(TokenByRefreshTokenModel.delete.where(_.refresh_token eqs token.refresh_token))
       .future()
   }
+
+  def deleteByAccessToken(accessToken: String): Future[ResultSet] = {
+    Batch.logged
+        .add(TokenByAccessTokenModel.delete.where(_.access_token eqs accessToken))
+      .add(TokenByRefreshTokenModel.delete.where(_.access_token eqs accessToken))
+      .future()
+  }
 }
 
 object TokenDatabase extends TokenDatabase(connector)
