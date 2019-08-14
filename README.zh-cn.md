@@ -98,7 +98,8 @@ post localhost:9000/api/token
     "appkey": "d9c28171-be68-11e9-b4e3-d3b42412204e",
     "refresh_token": "665cad90-be7d-11e9-ae62-d350c56ae498",
     "grant_type": "refresh_token"
-}```
+}
+```
 
 ## 统一资源入口
 
