@@ -1,12 +1,13 @@
 package io.comiccloud.service.tokens
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.model.StatusCodes.Unauthorized
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import com.datastax.driver.core.utils.UUIDs
-import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
+import io.comiccloud.rest.{ApiResponse, ApiResponseMeta, BasicRoutesDefinition, ErrorMessage}
 import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
@@ -99,6 +100,11 @@ class TokenRouters(tokenRef: ActorRef)(implicit val ec: ExecutionContext) extend
                 val command = CreateRefreshTokenCommand(vo)
                 serviceAndComplete[TokenPair](command, tokenRef)
               }
+
+            case BasicRequest(grantType) =>
+            complete(Unauthorized,
+              ApiResponse[String](ApiResponseMeta(Unauthorized.intValue,
+                Some(ErrorMessage(s"un-support grant type: $grantType")))))
           }
         }
       }

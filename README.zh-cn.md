@@ -2,12 +2,12 @@ Akka based oauth2
 =================
 
 
->1. if you need sharding region，modify each service Associate code with `forwardCommandWithoutSharding` to `forwardCommand`.
->2. until now both token and code with ttl 5 minutes.
+>1. 如果需要sharding region，修改各个实体Associate的`forwardCommandWithoutSharding` 为`forwardCommand`。 
+>2. 目前为硬编码的方式，即token为5分钟自动过期，code默认也是5分钟过期。
 
-Read this in other languages：[English](README.md), [简体中文](README.zh-cn.md)
+其它语言版本：[English](README.md), [简体中文](README.zh-cn.md)
 
-## Create Account
+## 创建用户
 
 ```
 put localhost:9000/api/account
@@ -19,14 +19,14 @@ put localhost:9000/api/account
 }
 ```
 
-## Apply a client
+## 申请客户端
 
-1. Account Id，will verify the owner
-2. Client Id，need to be a developer(doesn't check yet)
-3. Client Id，need to has roles(doesn't check yet)
-4. redirect uri
+1. 申请者Id，必须在account中有记录
+2. 申请者Id，需要是开发者角色(此处不验证)
+3. 申请者Id，拥有相关权限资格(此处不验证)
+4. 申请的网站回调地址
 
-This component(or service) will not check the password or any other form fields.
+授权服务平台，不作表单验证逻辑
 
 ```
 put localhost:9000/api/client
@@ -36,11 +36,11 @@ put localhost:9000/api/client
 }
 ```
 
-## Apply a Code
+## 申请Code
 
-1. Account Id
-2. Client Id
-3. The Redirect Uri, this is use for authorization_code mode.
+1. 申请者Id，必须在account中有记录
+2. 客户端Id，必须在client中有记录
+3. 申请者网站回调地址
 
 ```
 put localhost:9000/api/code
@@ -50,9 +50,9 @@ put localhost:9000/api/code
 }
 ```
 
-## Produce token
+## 产生token
 
-1. Generate by appid and appkey, `client_credentials` mode
+1. 由appid和appkey产生，客户端模式，不包含重定向地址
 
 ```
 post localhost:9000/api/token
@@ -63,7 +63,7 @@ post localhost:9000/api/token
 }
 ```
 
-2. `authorization_code` mode, the code will be consume and it has a shorten tll.
+2. 第三方平台模式，必须包含重定向地址，以及第三方申请的一次性code
 
 ```
 post localhost:9000/api/token
@@ -76,7 +76,7 @@ post localhost:9000/api/token
 }
 ```
 
-3. `password` mode, or sometimes call `form` mode,
+3. 账号密码模式，或者叫表单模式
 
 ```
 post localhost:9000/api/token
@@ -100,7 +100,7 @@ post localhost:9000/api/token
     "grant_type": "refresh_token"
 }```
 
-## The resource entrance
+## 统一资源入口
 
 ```bash
 curl --dump-header -H "Authorization: Bearer ${access_token}" http://localhost:9000/api/resources
