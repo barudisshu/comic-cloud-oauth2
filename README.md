@@ -7,6 +7,33 @@ Akka based oauth2
 
 Read this in other languages：[English](README.md), [简体中文](README.zh-cn.md)
 
+## Usage
+
+You need to add your user to the `docker` group.
+
+```bash
+sudo gpasswd -a ${USER} docker
+```
+
+package to jar file using `sbt-native-package` plugin, and wrote this docker images.
+
+```bash
+sbt packageBin
+sbt docker
+```
+
+publish your image to container,
+
+```bash
+sudo docker run -p 9000:9000 --name comic -it -d io.comiccloud/comic-cloud-oauth2
+```
+
+## Benchmark
+
+the statistics of the wrk show as belong, which only test on my laptop(cassandra and oauth2 placed in the same vmware)
+
+![wrk](doc/wrk.png)
+
 ## Create Account
 
 ```
