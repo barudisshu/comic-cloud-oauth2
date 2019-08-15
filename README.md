@@ -34,6 +34,8 @@ the statistics of the wrk show as belong, which only test on my laptop(cassandra
 
 ![wrk](doc/wrk.PNG)
 
+the benchmark result that: "more writes, less query" if your want to refactor with more higher performance. because our service only care about the `eventually consistent`.
+
 ## Create Account
 
 ```
