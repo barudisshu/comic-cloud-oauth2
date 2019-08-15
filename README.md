@@ -32,7 +32,7 @@ sudo docker run -p 9000:9000 --name comic -it -d io.comiccloud/comic-cloud-oauth
 
 the statistics of the wrk show as belong, which only test on my laptop(cassandra and oauth2 placed in the same vmware)
 
-![wrk](doc/wrk.png)
+![wrk](doc/wrk.PNG)
 
 ## Create Account
 
