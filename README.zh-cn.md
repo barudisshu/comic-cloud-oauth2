@@ -2,10 +2,21 @@ Akka based oauth2
 =================
 
 
->1. 如果需要sharding region，修改各个实体Associate的`forwardCommandWithoutSharding` 为`forwardCommand`。 
->2. 目前为硬编码的方式，即token为5分钟自动过期，code默认也是5分钟过期。
+>## 设计方案
+>1. account 和 client 写入到SQL数据库。
+>2. code进行sharding，读取后自动消失（重启失效）
+>3. token被存储到distributed data中，按需要更新（可以不更新，由于最终一致性问题，导致超时非常严重）
+>
+>
+>题外话：一般情况下，code和token应该使用redis进行缓存存储以保证重启服务依然有效[重构token部分，使用sharding和redis集群处理一致性延迟问题]。
 
 其它语言版本：[English](README.md), [简体中文](README.zh-cn.md)
+
+## 压测wrk
+
+
+![wrk](doc/wrk.PNG)
+
 
 ## 创建用户
 

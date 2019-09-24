@@ -1,23 +1,32 @@
 package io.comiccloud.service.tokens.factory.authorization_code
 
 import akka.actor.{ActorRef, FSM, Props}
-import com.datastax.driver.core.utils.UUIDs
+import io.comiccloud.digest.Hashes
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
-import io.comiccloud.service.clients.ClientFO
-import io.comiccloud.service.codes.{CodeDeleteFO, CodeFO}
+import io.comiccloud.service.accounts.response.AccountResp
+import io.comiccloud.service.clients.response.ClientResp
+import io.comiccloud.service.codes.response.CodeResp
+import io.comiccloud.service.tokens.TokenActor.CreateValidatedToken
 import io.comiccloud.service.tokens._
+import io.comiccloud.service.tokens.request._
+import io.comiccloud.service.tokens.response.TokenResp
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object TokenAuthorizationCodeCreateValidator {
-  def props(): Props = Props(new TokenAuthorizationCodeCreateValidator())
+  def props(accountRepo: AccountsRepository,
+            clientRepo: ClientsRepository,
+            codeRef: ActorRef): Props =
+    Props(new TokenAuthorizationCodeCreateValidator(accountRepo, clientRepo, codeRef))
 
   sealed trait State
   case object WaitingForRequest        extends State
   case object TokenHasRespondedAccount extends State
+  case object TokenHasRespondedSubject extends State
   case object TokenHasRespondedCode    extends State
-  case object TokenCodeHasBeenDelete   extends State
+  case object PersistenceRecord extends State
 
   sealed trait Data {
     def inputs: Inputs
@@ -25,25 +34,32 @@ object TokenAuthorizationCodeCreateValidator {
   case object NoData extends Data {
     def inputs = Inputs(ActorRef.noSender, null)
   }
-  case class Inputs(originator: ActorRef, request: CreateAuthorizationCodeTokenCommand)
+  case class Inputs(originator: ActorRef, request: CreateAuthorizationCodeTokenReq)
   trait InputsData extends Data {
     def inputs: Inputs
     def originator: ActorRef = inputs.originator
   }
-  case class UnresolvedDependencies(inputs: Inputs)                                          extends InputsData
-  case class ResolvedDependencies(inputs: Inputs)                                            extends InputsData
-  case class LookedUpData(inputs: Inputs, clientFO: ClientFO, codeFO: CodeFO, user: TokenFO) extends InputsData
+  case class UnresolvedDependencies(inputs: Inputs)                                              extends InputsData
+  case class ResolvedDependencies(inputs: Inputs)                                                extends InputsData
+  case class LookedUpData(inputs: Inputs,
+                          clientResp: ClientResp,
+                          accountResp: AccountResp,
+                          codeResp: CodeResp,
+                          user: TokenResp) extends InputsData
 
   object ResolutionIdent extends Enumeration {
     val Token: Value = Value
   }
 
-  val InvalidClientIdError = ErrorMessage("client.invalid.clientId", Some("You have supplied an invalid client id"))
-  val InvalidCodeIdError   = ErrorMessage("code.invalid.codeId", Some("You have supplied an invalid code"))
+  val InvalidClientIdError  = ErrorMessage("client.invalid.clientId", Some("You have supplied an invalid client id"))
+  val InvalidAccountIdError = ErrorMessage("account.invalid.accountId", Some("You have supplied an invalid account id"))
+  val InvalidCodeIdError    = ErrorMessage("code.invalid.codeId", Some("You have supplied an invalid code"))
 
 }
 
-private[tokens] class TokenAuthorizationCodeCreateValidator()
+private[tokens] class TokenAuthorizationCodeCreateValidator(val accountRepo: AccountsRepository,
+                                                            val clientRepo: ClientsRepository,
+                                                            val codeRef: ActorRef)
     extends FSM[TokenAuthorizationCodeCreateValidator.State, TokenAuthorizationCodeCreateValidator.Data]
     with TokenFactory {
 
@@ -52,54 +68,64 @@ private[tokens] class TokenAuthorizationCodeCreateValidator()
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
-    case Event(request: CreateAuthorizationCodeTokenCommand, _) =>
-      findingByClientId ! FindTokenRelateClientCommand(request.vo.appid, request.vo.appkey)
+    case Event(request: CreateAuthorizationCodeTokenReq, _) =>
+      findingByClientId ! FindTokenRelateClientReq(request.vo.clientId, request.vo.clientSecret)
       goto(TokenHasRespondedAccount) using ResolvedDependencies(Inputs(sender, request))
   }
 
   when(TokenHasRespondedAccount, 5 seconds) {
-    case Event(FullResult(clientFO: ClientFO), data @ ResolvedDependencies(inputs)) =>
-      log.debug("the client does exists {}", clientFO.ownerId)
-      findingByCodeId ! FindTokenRelateCodeCommand(inputs.request.vo.code)
-      goto(TokenHasRespondedCode) using LookedUpData(inputs, clientFO, null, null)
+    case Event(FullResult(clientResp: ClientResp), ResolvedDependencies(inputs)) =>
+      findingByAccountId ! FindTokenRelateAccountIdReq(clientResp.ownerId)
+      goto(TokenHasRespondedSubject) using LookedUpData(inputs, clientResp, null, null, null)
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the client")
       data.originator ! Failure(FailureType.Validation, InvalidClientIdError)
       stop
   }
 
+  when(TokenHasRespondedSubject, 5 seconds) {
+    case Event(FullResult(accountResp: AccountResp), LookedUpData(inputs, clientResp, _, _, _)) =>
+      findingByCodeId ! FindTokenRelateCodeReq(inputs.request.vo.code)
+      goto(TokenHasRespondedCode) using LookedUpData(inputs, clientResp, accountResp, null, null)
+    case Event(EmptyResult, data: ResolvedDependencies) =>
+      log.error("can not find the account")
+      data.originator ! Failure(FailureType.Validation, InvalidAccountIdError)
+      stop
+  }
+
   when(TokenHasRespondedCode, 5 seconds) {
-    case Event(FullResult(codeFO: CodeFO), data @ LookedUpData(inputs, _, _, _)) =>
-      deletingByCodeId ! DeleteTokenRelateCodeCommand(inputs.request.vo.code)
-      goto(TokenCodeHasBeenDelete) using data.copy(codeFO = codeFO)
+    case Event(FullResult(codeResp: CodeResp), LookedUpData(inputs, clientResp, accountResp, _, _)) =>
+      val tokenResp = TokenResp(
+        accountId = clientResp.ownerId,
+        clientId = inputs.request.vo.clientId,
+        accessToken = Hashes.randomSha256().toString,
+        refreshToken = Hashes.randomSha256().toString,
+        account = accountResp,
+        client = clientResp
+      )
+      creator ! CreateTokenReq(tokenResp)
+      goto(PersistenceRecord) using LookedUpData(inputs, clientResp, accountResp, codeResp, tokenResp)
     case Event(EmptyResult, data: LookedUpData) =>
       log.error("can not find the code, may it's expired")
       data.originator ! Failure(FailureType.Validation, InvalidCodeIdError)
       stop
-    case Event(_:Failure, data: LookedUpData) =>
-    log.error("can not find the code, not found at all")
+    case Event(_: Failure, data: LookedUpData) =>
+      log.error("can not find the code, not found at all")
       data.originator ! Failure(FailureType.Validation, InvalidCodeIdError)
       stop
   }
 
-  when(TokenCodeHasBeenDelete, 5 seconds)(transform {
-    case Event(FullResult(_: CodeDeleteFO), data: LookedUpData) =>
-      stay.using(data)
-    case Event(EmptyResult, data: LookedUpData) =>
-      stay.using(data)
-  }.using {
-    case FSM.State(_, LookedUpData(inputs, clientFO, _, _), _, _, _) =>
-      val tokenFO = TokenFO(
-        id = inputs.request.vo.id,
-        accountId = clientFO.ownerId,
-        appid = inputs.request.vo.appid,
-        appkey = inputs.request.vo.appkey,
-        token = inputs.request.vo.id,
-        refreshToken = UUIDs.timeBased().toString
-      )
-      context.parent.tell(CreateValidatedTokenCommand(tokenFO), inputs.originator)
+  when(PersistenceRecord, 10 seconds) {
+    case Event(FullResult(txn: TokenResp), LookedUpData(inputs, _, _, _, tokenResp)) =>
+      context.parent.tell(CreateValidatedToken(tokenResp), inputs.originator)
       stop
-  })
+    case Event(failure: Failure, data: LookedUpData) =>
+      data.originator ! failure
+      stop
+    case Event(empty: Empty, data: LookedUpData) =>
+      data.originator ! empty
+      stop
+  }
 
   whenUnhandled {
     case Event(StateTimeout, data) =>

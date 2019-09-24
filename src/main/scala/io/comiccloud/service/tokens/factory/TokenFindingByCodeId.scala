@@ -1,20 +1,29 @@
 package io.comiccloud.service.tokens.factory
 
-import akka.actor.{Actor, ActorLogging, Props}
-import io.comiccloud.modeling.database.CodeDatabase
-import io.comiccloud.service.CommonBehaviorResolver
-import io.comiccloud.service.tokens.FindTokenRelateCodeCommand
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import io.comiccloud.rest.{EmptyResult, FullResult}
+import io.comiccloud.service.codes.CodeActor.StopEntity
+import io.comiccloud.service.codes.request.FindCodeByIdReq
+import io.comiccloud.service.tokens.request.FindTokenRelateCodeReq
 
 private[tokens] object TokenFindingByCodeId {
-  def props(): Props = Props(new TokenFindingByCodeId())
+  def props(codeRef: ActorRef): Props = Props(new TokenFindingByCodeId(codeRef))
 }
 
-class TokenFindingByCodeId() extends Actor with ActorLogging with CommonBehaviorResolver {
-  import akka.pattern.pipe
-  import context.dispatcher
+class TokenFindingByCodeId(codeRef: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
-    case FindTokenRelateCodeCommand(codeId) =>
-      context become resolveFindingCodeById(sender)
-      CodeDatabase.CodeModel.getById(codeId) pipeTo self
+    case FindTokenRelateCodeReq(codeId) =>
+      context become destroy(sender)
+      codeRef.tell(FindCodeByIdReq(codeId), self)
+  }
+
+  // after fetching the code, the sharding will be destroyed
+  private def destroy(replyTo: ActorRef): Receive = {
+    case f@FullResult(_) =>
+      sender ! StopEntity
+      replyTo ! f
+    case e@EmptyResult =>
+      sender ! StopEntity
+    replyTo ! e
   }
 }

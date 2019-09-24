@@ -1,16 +1,19 @@
 package io.comiccloud.service.clients.factory
 
 import akka.actor.{ActorRef, FSM, Props}
-import io.comiccloud.rest._
-import io.comiccloud.service.clients.ClientEntity.CreateValidatedClient
-import io.comiccloud.service.clients.{ClientFO, ClientFactory, CreateClientCommand, FindClientByAccountIdCommand}
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
+import io.comiccloud.rest.{ErrorMessage, Failure, FailureType, FullResult, _}
+import io.comiccloud.service.clients.ClientActor.CreateValidatedClient
+import io.comiccloud.service.clients.ClientFactory
+import io.comiccloud.service.clients.request.{CreateClientReq, FindClientByAccountIdReq}
+import io.comiccloud.service.clients.response.ClientResp
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 private[clients] object ClientCreateValidator {
-  def props(): Props =
-    Props(new ClientCreateValidator())
+  def props(clientRepo: ClientsRepository, accountRepo: AccountsRepository): Props =
+    Props(new ClientCreateValidator(clientRepo, accountRepo))
 
   sealed trait State
   case object WaitingForRequest         extends State
@@ -25,16 +28,16 @@ private[clients] object ClientCreateValidator {
     override def inputs = Inputs(ActorRef.noSender, null)
   }
 
-  case class Inputs(originator: ActorRef, request: CreateClientCommand)
+  case class Inputs(originator: ActorRef, request: CreateClientReq)
 
   trait InputsData extends Data {
     def inputs: Inputs
     def originator: ActorRef = inputs.originator
   }
 
-  case class UnresolvedDependencies(inputs: Inputs)         extends InputsData
-  case class ResolvedDependencies(inputs: Inputs)           extends InputsData
-  case class LookedUpData(inputs: Inputs, client: ClientFO) extends InputsData
+  case class UnresolvedDependencies(inputs: Inputs)           extends InputsData
+  case class ResolvedDependencies(inputs: Inputs)             extends InputsData
+  case class LookedUpData(inputs: Inputs, client: ClientResp) extends InputsData
 
   val InvalidClientGrantTypeError = ErrorMessage("client.invalid.grantType", Some("The grant type is not supply"))
   val InvalidClientIdError        = ErrorMessage("client.invalid.clientId", Some("You have supplied an invalid client id"))
@@ -45,7 +48,7 @@ private[clients] object ClientCreateValidator {
   val grantTypes: Seq[String] = Seq(AUTHORIZATION_CODE, CLIENT_CREDENTIALS, PASSWORD, IMPLICIT)
 }
 
-private[clients] class ClientCreateValidator()
+private[clients] class ClientCreateValidator(val clientRepo: ClientsRepository, val accountRepo: AccountsRepository)
     extends FSM[ClientCreateValidator.State, ClientCreateValidator.Data]
     with ClientFactory {
 
@@ -54,11 +57,11 @@ private[clients] class ClientCreateValidator()
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
-    case Event(CreateClientCommand(client: ClientFO), _) if !grantTypes.contains(client.grantType) =>
+    case Event(CreateClientReq(client: ClientResp), _) if !grantTypes.contains(client.grantType) =>
       sender() ! Failure(FailureType.Validation, InvalidClientGrantTypeError)
       stop
-    case Event(request: CreateClientCommand, _) =>
-      findingByAccountId ! FindClientByAccountIdCommand(request.vo.ownerId)
+    case Event(request: CreateClientReq, _) =>
+      finder ! FindClientByAccountIdReq(request.vo.ownerId)
       goto(ClientHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
@@ -76,7 +79,7 @@ private[clients] class ClientCreateValidator()
   }
 
   when(PersistenceRecord, 10 seconds) {
-    case Event(FullResult(txn: ClientFO), data: LookedUpData) =>
+    case Event(FullResult(txn: ClientResp), data: LookedUpData) =>
       context.parent.tell(CreateValidatedClient(data.inputs.request), data.inputs.originator)
       stop
     case Event(failure: Failure, data: LookedUpData) =>

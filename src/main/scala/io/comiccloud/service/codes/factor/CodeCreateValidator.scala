@@ -1,16 +1,19 @@
 package io.comiccloud.service.codes.factor
 
 import akka.actor.{ActorRef, FSM, Props}
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
-import io.comiccloud.service.codes.CodeEntity.CreateValidatedCode
+import io.comiccloud.service.codes.CodeActor.CreateValidatedCode
 import io.comiccloud.service.codes._
+import io.comiccloud.service.codes.request.{CreateCodeReq, FindCodeRelateAccountIdReq, FindCodeRelateClientIdReq}
+import io.comiccloud.service.codes.response.CodeResp
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 private[codes] object CodeCreateValidator {
-  def props(): Props =
-    Props(new CodeCreateValidator())
+  def props(accountRepo: AccountsRepository, clientRepo: ClientsRepository): Props =
+    Props(new CodeCreateValidator(accountRepo, clientRepo))
 
   sealed trait State
   case object WaitingForRequest       extends State
@@ -26,7 +29,7 @@ private[codes] object CodeCreateValidator {
     override def inputs = Inputs(ActorRef.noSender, null)
   }
 
-  case class Inputs(originator: ActorRef, request: CreateCodeCommand)
+  case class Inputs(originator: ActorRef, request: CreateCodeReq)
 
   trait InputsData extends Data {
     def inputs: Inputs
@@ -35,7 +38,7 @@ private[codes] object CodeCreateValidator {
 
   case class UnresolvedDependencies(inputs: Inputs)       extends InputsData
   case class ResolvedDependencies(inputs: Inputs)         extends InputsData
-  case class LookedUpData(inputs: Inputs, client: CodeFO) extends InputsData
+  case class LookedUpData(inputs: Inputs, client: CodeResp) extends InputsData
 
   val InvalidAccountIdError = ErrorMessage("account.invalid.accountId", Some("the accountUid does not found"))
   val InvalidClientIdError  = ErrorMessage("client.invalid.clientId", Some("the clientUid does not found"))
@@ -44,7 +47,8 @@ private[codes] object CodeCreateValidator {
 /**
   * checkout the generation, if pass, feedback CodeReadyFO
   */
-private[codes] class CodeCreateValidator()
+private[codes] class CodeCreateValidator(val accountRepo: AccountsRepository,
+                                         val clientRepo: ClientsRepository)
     extends FSM[CodeCreateValidator.State, CodeCreateValidator.Data]
     with CodeFactory {
 
@@ -53,14 +57,14 @@ private[codes] class CodeCreateValidator()
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
-    case Event(request: CreateCodeCommand, _) =>
-      findingByAccountId ! FindCodeRelateAccountIdCommand(request.vo.accountId)
+    case Event(request: CreateCodeReq, _) =>
+      findingByAccountId ! FindCodeRelateAccountIdReq(request.vo.accountId)
       goto(CodeHasRespondedAccount) using ResolvedDependencies(Inputs(sender(), request))
   }
 
   when(CodeHasRespondedAccount, 5 seconds) {
     case Event(FullResult(_), data @ ResolvedDependencies(inputs)) =>
-      findingByClientId ! FindCodeRelateClientIdCommand(inputs.request.vo.appid)
+      findingByClientId ! FindCodeRelateClientIdReq(inputs.request.vo.clientId)
       goto(CodeHasRespondedClient) using data
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the account")
@@ -79,7 +83,7 @@ private[codes] class CodeCreateValidator()
   }
 
   when(PersistenceRecord, 10 seconds) {
-    case Event(FullResult(txn: CodeFO), data: LookedUpData) =>
+    case Event(FullResult(txn: CodeResp), data: LookedUpData) =>
       context.parent.tell(CreateValidatedCode(data.inputs.request), data.inputs.originator)
       stop
     case Event(failure: Failure, data: LookedUpData) =>

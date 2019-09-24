@@ -4,11 +4,12 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
-import com.datastax.driver.core.utils.UUIDs
 import io.comiccloud.digest.Hashes
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.codes.CodeRouters.CreateCodeRequest
+import io.comiccloud.service.codes.request.CreateCodeReq
+import io.comiccloud.service.codes.response.CodeResp
 import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
@@ -29,15 +30,14 @@ class CodeRouters(codeRef: ActorRef)(implicit val ec: ExecutionContext) extends 
         put {
           entity(as[CreateCodeRequest]) { request =>
           val id = Hashes.randomHexString(5)
-            val vo = CodeFO(
-              id = id,
+            val vo = CodeResp(
               code = id,
               accountId = request.accountId,
-              appid = request.clientId,
+              clientId = request.clientId,
               redirectUri = request.redirectUri
             )
-            val command = CreateCodeCommand(vo)
-            serviceAndComplete[CodeFO](command, codeRef)
+            val command = CreateCodeReq(vo)
+            serviceAndComplete[CodeResp](command, codeRef)
           }
         }
       }

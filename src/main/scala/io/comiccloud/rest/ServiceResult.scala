@@ -46,7 +46,7 @@ case class ErrorMessage(code: String, shortText: Option[String] = None, params: 
 
 object ErrorMessage {
   val InvalidEntityId = ErrorMessage("invalid.entity.id", Some("No matching entity found"))
-  val InvalidAuthOp   = ErrorMessage("invalid.auth.op", Some("Authorization faild"))
+  val InvalidAuthOp   = ErrorMessage("invalid.auth.op", Some("Authorization fail"))
 }
 
 sealed case class Failure(failType: FailureType.Value, message: ErrorMessage, exception: Option[Throwable] = None)

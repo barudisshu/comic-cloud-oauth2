@@ -1,14 +1,16 @@
 package io.comiccloud.service.clients
 
+import java.util.UUID
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
-import com.datastax.driver.core.utils.UUIDs
-import io.comiccloud.digest.Hashes
 import io.comiccloud.rest.BasicRoutesDefinition
 import io.comiccloud.rest.ServiceProtocol._
 import io.comiccloud.service.clients.ClientRouters.CreateClientRequest
+import io.comiccloud.service.clients.request.CreateClientReq
+import io.comiccloud.service.clients.response.ClientResp
 import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
@@ -28,17 +30,17 @@ class ClientRouters(clientRef: ActorRef)(implicit val ec: ExecutionContext) exte
       pathPrefix("client") {
         put {
           entity(as[CreateClientRequest]) { request =>
-            val id = UUIDs.timeBased().toString
-            val vo = ClientFO(
-              id = id,
+            val clientId = UUID.randomUUID().toString
+            val vo = ClientResp(
+              id = clientId,
               ownerId = request.accountId,
-              appid = id,
-              appkey = UUIDs.timeBased().toString,
+              clientId = clientId,
+              clientSecret = clientId,
               grantType = request.grantType,
               redirectUri = request.redirectUri
             )
-            val command = CreateClientCommand(vo)
-            serviceAndComplete[ClientFO](command, clientRef)
+            val command = CreateClientReq(vo)
+            serviceAndComplete[ClientResp](command, clientRef)
           }
         }
       }

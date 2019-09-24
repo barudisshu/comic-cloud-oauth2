@@ -1,13 +1,16 @@
 package io.comiccloud.service.accounts
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import io.comiccloud.entity.EntityFactory
-import io.comiccloud.service.accounts.factory.{AccountCreateValidator, AccountCreator, AccountFinder}
+import io.comiccloud.repository.AccountsRepository
+import io.comiccloud.service.accounts.factory._
 
-trait AccountFactory extends EntityFactory {
+trait AccountFactory {
   this: Actor with ActorLogging =>
 
-  def validator: ActorRef = context.actorOf(AccountCreateValidator.props())
-  def creator: ActorRef = context.actorOf(AccountCreator.props())
-  def findingById: ActorRef = context.actorOf(AccountFinder.props())
+  val accountRepo: AccountsRepository
+
+  def validator: ActorRef = context.actorOf(AccountCreateValidator.props(accountRepo))
+  def creator: ActorRef = context.actorOf(AccountCreator.props(accountRepo))
+  def findingById: ActorRef = context.actorOf(AccountFinder.props(accountRepo))
+
 }

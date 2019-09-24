@@ -4,8 +4,6 @@ import java.sql.Timestamp
 import java.util.Date
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.joda.time.DateTime
-import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
 import spray.json._
 
 import scala.concurrent.duration.FiniteDuration
@@ -14,7 +12,9 @@ import scala.concurrent.duration.FiniteDuration
   * Root json protocol class for others to extend from
   */
 trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+
   import reflect._
+
   private val PASS1       = """([A-Z]+)([A-Z][a-z])""".r
   private val PASS2       = """([a-z\d])([A-Z])""".r
   private val REPLACEMENT = "$1_$2"
@@ -22,6 +22,7 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     import java.util.Locale
     def snakify(name: String) =
       PASS2.replaceAllIn(PASS1.replaceAllIn(name, REPLACEMENT), REPLACEMENT).toLowerCase(Locale.US)
+
     super.extractFieldNames(classTag).map { snakify }
   }
   implicit object DateFormat extends JsonFormat[Date] {
@@ -51,14 +52,6 @@ trait ServiceProtocol extends SprayJsonSupport with DefaultJsonProtocol {
       case JsTrue      => true
       case JsFalse     => false
       case _           => serializationError(s"serialization error")
-    }
-  }
-  implicit object DateJsonFormat extends RootJsonFormat[DateTime] {
-    private val parserISO: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
-    override def write(obj: DateTime)        = JsString(parserISO.print(obj))
-    override def read(json: JsValue): DateTime = json match {
-      case JsString(s) => parserISO.parseDateTime(s)
-      case _           => throw DeserializationException("Error info you want here ...")
     }
   }
   implicit object FiniteDurationJsonFormat extends RootJsonFormat[FiniteDuration] {

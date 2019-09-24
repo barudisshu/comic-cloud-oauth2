@@ -1,45 +1,33 @@
 package io.comiccloud.service.clients.factory
 
-import java.util.UUID
-
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import io.comiccloud.modeling.database.ClientDatabase
-import io.comiccloud.modeling.entity.Client
-import io.comiccloud.rest._
-import io.comiccloud.service.clients.{ClientFO, CreateClientCommand}
+import akka.actor.{Actor, ActorLogging, Props}
+import io.comiccloud.models.Client
+import io.comiccloud.repository.ClientsRepository
+import io.comiccloud.service.CommonBehaviorResolver
+import io.comiccloud.service.clients.request.CreateClientReq
 
 private[clients] object ClientCreator {
-  def props(): Props = Props(new ClientCreator())
+  def props(clientRepo: ClientsRepository): Props = Props(new ClientCreator(clientRepo))
 }
 
-class ClientCreator() extends Actor with ActorLogging {
+class ClientCreator(clientRepo: ClientsRepository) extends Actor with ActorLogging with CommonBehaviorResolver {
 
   import akka.pattern.pipe
   import context.dispatcher
 
   override def receive: Receive = {
-    case CreateClientCommand(vo) =>
+    case CreateClientReq(vo) =>
       val client = Client(
-        owner_id = UUID.fromString(vo.ownerId),
-        appid = UUID.fromString(vo.appid),
-        appkey = UUID.fromString(vo.appkey),
-        redirect_uri = vo.redirectUri,
-        grant_type = vo.grantType,
-        created_at = vo.createdAt
+        uid = vo.id,
+        ownerId = vo.ownerId,
+        clientId = vo.clientId,
+        clientSecret = vo.clientSecret,
+        redirectUri = vo.redirectUri,
+        grantType = vo.grantType,
+        createdAt = vo.createdAt
       )
-      context become feedback(vo, sender)
-      ClientDatabase.saveOrUpdate(client).map(x => if(x.isFullyFetched()) client else None) pipeTo self
+      context become feedback[Client](vo, sender)
+      clientRepo.insert(client) pipeTo self
   }
 
-  def feedback(o: ClientFO, replyTo: ActorRef): Receive = {
-    case cli: Client =>
-      replyTo ! FullResult(o)
-      self ! PoisonPill
-    case f: akka.actor.Status.Failure =>
-      replyTo ! Failure(FailureType.Service, ErrorMessage("500", Some(s"db exception: ${f.cause.getLocalizedMessage}")))
-      self ! PoisonPill
-    case _ =>
-      replyTo ! EmptyResult
-      context stop self
-  }
 }

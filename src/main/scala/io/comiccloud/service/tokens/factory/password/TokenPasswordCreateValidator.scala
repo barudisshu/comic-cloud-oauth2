@@ -1,23 +1,33 @@
 package io.comiccloud.service.tokens.factory.password
 
 import akka.actor.{ActorRef, FSM, Props}
-import com.datastax.driver.core.utils.UUIDs
+import io.comiccloud.digest.Hashes
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.rest._
-import io.comiccloud.service.accounts.AccountFO
-import io.comiccloud.service.clients.ClientFO
+import io.comiccloud.service.accounts.response.AccountResp
+import io.comiccloud.service.clients.response.ClientResp
+import io.comiccloud.service.tokens.TokenActor.CreateValidatedToken
 import io.comiccloud.service.tokens._
+import io.comiccloud.service.tokens.request.{CreatePasswordTokenReq, CreateTokenReq, FindTokenRelateAccountIdReq, FindTokenRelateClientReq}
+import io.comiccloud.service.tokens.response.TokenResp
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object TokenPasswordCreateValidator {
-  def props(): Props = Props(new TokenPasswordCreateValidator())
+  def props(accountRepo: AccountsRepository,
+            clientRepo: ClientsRepository,
+            codeRef: ActorRef): Props =
+    Props(new TokenPasswordCreateValidator(
+      accountRepo,
+      clientRepo,
+      codeRef))
 
   sealed trait State
   case object WaitingForRequest        extends State
   case object TokenHasRespondedAccount extends State
   case object TokenHasRespondedSubject extends State
-  case object InsertDb                 extends State
+  case object PersistenceRecord        extends State
 
   sealed trait Data {
     def inputs: Inputs
@@ -25,14 +35,14 @@ object TokenPasswordCreateValidator {
   case object NoData extends Data {
     def inputs = Inputs(ActorRef.noSender, null)
   }
-  case class Inputs(originator: ActorRef, request: CreatePasswordTokenCommand)
+  case class Inputs(originator: ActorRef, request: CreatePasswordTokenReq)
   trait InputsData extends Data {
     def inputs: Inputs
     def originator: ActorRef = inputs.originator
   }
-  case class UnresolvedDependencies(inputs: Inputs)                             extends InputsData
-  case class ResolvedDependencies(inputs: Inputs)                               extends InputsData
-  case class LookedUpData(inputs: Inputs, clientFO: ClientFO, tokenFO: TokenFO) extends InputsData
+  case class UnresolvedDependencies(inputs: Inputs)                                     extends InputsData
+  case class ResolvedDependencies(inputs: Inputs)                                       extends InputsData
+  case class LookedUpData(inputs: Inputs, clientResp: ClientResp, tokenResp: TokenResp) extends InputsData
 
   object ResolutionIdent extends Enumeration {
     val Token: Value = Value
@@ -44,7 +54,9 @@ object TokenPasswordCreateValidator {
 
 }
 
-private[tokens] class TokenPasswordCreateValidator
+private[tokens] class TokenPasswordCreateValidator(val accountRepo: AccountsRepository,
+                                                   val clientRepo: ClientsRepository,
+                                                   val codeRef: ActorRef)
     extends FSM[TokenPasswordCreateValidator.State, TokenPasswordCreateValidator.Data]
     with TokenFactory {
   import TokenPasswordCreateValidator._
@@ -52,16 +64,16 @@ private[tokens] class TokenPasswordCreateValidator
   startWith(WaitingForRequest, NoData)
 
   when(WaitingForRequest) {
-    case Event(request: CreatePasswordTokenCommand, _) =>
-      findingByClientId ! FindTokenRelateClientCommand(request.vo.appid, request.vo.appkey)
+    case Event(request: CreatePasswordTokenReq, _) =>
+      findingByClientId ! FindTokenRelateClientReq(request.vo.clientId, request.vo.clientSecret)
       goto(TokenHasRespondedAccount) using ResolvedDependencies(Inputs(sender, request))
   }
 
   when(TokenHasRespondedAccount, 5 seconds) {
-    case Event(FullResult(clientFO: ClientFO), data @ ResolvedDependencies(inputs)) =>
-      log.debug("the client does exists {}", clientFO.ownerId)
-      findingByAccountId ! FindTokenRelateAccountIdCommand(clientFO.ownerId)
-      goto(TokenHasRespondedSubject) using LookedUpData(inputs, clientFO, null)
+    case Event(FullResult(clientResp: ClientResp), data @ ResolvedDependencies(inputs)) =>
+      log.debug("the client does exists {}", clientResp.ownerId)
+      findingByAccountId ! FindTokenRelateAccountIdReq(clientResp.ownerId)
+      goto(TokenHasRespondedSubject) using LookedUpData(inputs, clientResp, null)
     case Event(EmptyResult, data: ResolvedDependencies) =>
       log.error("can not find the client")
       data.originator ! Failure(FailureType.Validation, InvalidClientIdError)
@@ -69,21 +81,21 @@ private[tokens] class TokenPasswordCreateValidator
   }
 
   when(TokenHasRespondedSubject, 5 seconds) {
-    case Event(FullResult(accountFO: AccountFO), LookedUpData(inputs, clientFO, _)) =>
-      if (accountFO.username.equalsIgnoreCase(inputs.request.vo.username)
-          && accountFO.password.equalsIgnoreCase(inputs.request.vo.password)) {
-        val tokenFO = TokenFO(
-          id = inputs.request.vo.id,
-          accountId = clientFO.ownerId,
-          appid = inputs.request.vo.appid,
-          appkey = inputs.request.vo.appkey,
-          token = inputs.request.vo.id,
-          refreshToken = UUIDs.timeBased().toString
+    case Event(FullResult(accountResp: AccountResp), LookedUpData(inputs, clientResp, _)) =>
+      if (accountResp.username.equalsIgnoreCase(inputs.request.vo.username)
+          && accountResp.password.equalsIgnoreCase(inputs.request.vo.password)) {
+        val tokenResp = TokenResp(
+          accountId = clientResp.ownerId,
+          clientId = inputs.request.vo.clientId,
+          accessToken = Hashes.randomSha256().toString,
+          refreshToken = Hashes.randomSha256().toString,
+          account = accountResp,
+          client = clientResp
         )
-        context.parent.tell(CreateValidatedTokenCommand(tokenFO), inputs.originator)
-        stop
+        creator ! CreateTokenReq(tokenResp)
+        goto(PersistenceRecord) using LookedUpData(inputs, clientResp, tokenResp)
       } else {
-        log.error("the user")
+        log.error("the user has invalid subject")
         inputs.originator ! Failure(FailureType.Validation, InvalidUsernameAndPassword)
         stop
       }
@@ -91,7 +103,18 @@ private[tokens] class TokenPasswordCreateValidator
       log.error("can not find the account")
       data.originator ! Failure(FailureType.Validation, InvalidAccountIdError)
       stop
+  }
 
+  when(PersistenceRecord, 10 seconds) {
+    case Event(FullResult(txn: TokenResp), LookedUpData(inputs, clientResp, tokenResp)) =>
+      context.parent.tell(CreateValidatedToken(tokenResp), inputs.originator)
+      stop
+    case Event(failure: Failure, data: LookedUpData) =>
+      data.originator ! failure
+      stop
+    case Event(empty: Empty, data: LookedUpData) =>
+      data.originator ! empty
+      stop
   }
 
   whenUnhandled {

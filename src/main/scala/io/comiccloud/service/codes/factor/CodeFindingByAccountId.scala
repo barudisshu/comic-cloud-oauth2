@@ -1,23 +1,23 @@
 package io.comiccloud.service.codes.factor
 
-import java.util.UUID
-
 import akka.actor.{Actor, ActorLogging, Props}
-import io.comiccloud.modeling.database.AccountDatabase
+import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.service.CommonBehaviorResolver
-import io.comiccloud.service.codes.FindCodeRelateAccountIdCommand
+import io.comiccloud.service.codes.request.FindCodeRelateAccountIdReq
 
 object CodeFindingByAccountId {
-  def props(): Props = Props(new CodeFindingByAccountId())
+  def props(accountRepo: AccountsRepository): Props = Props(new CodeFindingByAccountId(accountRepo))
 }
 
-class CodeFindingByAccountId() extends Actor with ActorLogging with CommonBehaviorResolver {
+class CodeFindingByAccountId(accountRepo: AccountsRepository)
+    extends Actor
+    with ActorLogging
+    with CommonBehaviorResolver {
   import akka.pattern.pipe
   import context.dispatcher
-
   override def receive: Receive = {
-    case FindCodeRelateAccountIdCommand(accountId) =>
+    case FindCodeRelateAccountIdReq(accountId) =>
       context become resolveFindingAccountById(sender)
-      AccountDatabase.AccountModel.getByAccountId(UUID.fromString(accountId)) pipeTo self
+      accountRepo.findByUid(accountId) pipeTo self
   }
 }

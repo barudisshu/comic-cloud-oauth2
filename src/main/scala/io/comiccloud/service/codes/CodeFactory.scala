@@ -1,15 +1,19 @@
 package io.comiccloud.service.codes
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import io.comiccloud.entity.EntityFactory
+import io.comiccloud.repository.{AccountsRepository, ClientsRepository}
 import io.comiccloud.service.codes.factor._
 
-trait CodeFactory extends EntityFactory {
+trait CodeFactory {
   this: Actor with ActorLogging =>
 
-  def creator: ActorRef            = context.actorOf(CodeCreator.props())
-  def validator: ActorRef          = context.actorOf(CodeCreateValidator.props())
-  def findingByAccountId: ActorRef = context.actorOf(CodeFindingByAccountId.props())
-  def findingByClientId: ActorRef  = context.actorOf(CodeFindingByClientId.props())
+  val accountRepo: AccountsRepository
+  val clientRepo: ClientsRepository
+
+  def creator: ActorRef = context.actorOf(CodeCreator.props())
+  def consumer: ActorRef = context.actorOf(CodeConsumer.props())
+  def validator: ActorRef = context.actorOf(CodeCreateValidator.props(accountRepo, clientRepo))
+  def findingByAccountId: ActorRef = context.actorOf(CodeFindingByAccountId.props(accountRepo))
+  def findingByClientId: ActorRef = context.actorOf(CodeFindingByClientId.props(clientRepo))
 
 }

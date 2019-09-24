@@ -1,28 +1,24 @@
 package io.comiccloud.service.accounts.factory
 
-import java.util.UUID
-
 import akka.actor.{Actor, ActorLogging, Props}
-import io.comiccloud.modeling.database.AccountDatabase
+import io.comiccloud.repository.AccountsRepository
 import io.comiccloud.service.CommonBehaviorResolver
-import io.comiccloud.service.accounts.{FindAccountByIdCommand, FindAccountByUsernameCommand}
+import io.comiccloud.service.accounts.request.{FindAccountByIdReq, FindAccountByUsernameReq}
 
 object AccountFinder {
-  def props(): Props = Props(new AccountFinder())
+  def props(accountRepo: AccountsRepository): Props = Props(new AccountFinder(accountRepo))
 }
 
-class AccountFinder() extends Actor with ActorLogging with CommonBehaviorResolver {
-
-  import akka.pattern.pipe
+class AccountFinder(accountRepo: AccountsRepository) extends Actor with ActorLogging with CommonBehaviorResolver {
   import context.dispatcher
-
+  import akka.pattern.pipe
   override def receive: Receive = {
-    case FindAccountByIdCommand(id) =>
+    case FindAccountByIdReq(id) =>
       context become resolveFindingAccountById(sender)
-      AccountDatabase.AccountModel.getByAccountId(UUID.fromString(id)) pipeTo self
+      accountRepo.findByUid(id) pipeTo self
 
-    case FindAccountByUsernameCommand(_, username) =>
+    case FindAccountByUsernameReq(username) =>
       context become resolveFindingAccountById(sender)
-      AccountDatabase.AccountByUsernameModel.getByAccountUsername(username).map(_.headOption) pipeTo self
+      accountRepo.findByUsername(username) pipeTo self
   }
 }

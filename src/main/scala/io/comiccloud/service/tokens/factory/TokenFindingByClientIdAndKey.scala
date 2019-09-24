@@ -1,22 +1,21 @@
 package io.comiccloud.service.tokens.factory
 
-import java.util.UUID
-
 import akka.actor.{Actor, ActorLogging, Props}
-import io.comiccloud.modeling.database.ClientDatabase
+import io.comiccloud.repository.ClientsRepository
 import io.comiccloud.service.CommonBehaviorResolver
-import io.comiccloud.service.tokens.FindTokenRelateClientCommand
+import io.comiccloud.service.tokens.request.FindTokenRelateClientReq
 
 private[tokens] object TokenFindingByClientIdAndKey {
-  def props(): Props = Props(new TokenFindingByClientIdAndKey())
+  def props(clientRepo: ClientsRepository): Props = Props(new TokenFindingByClientIdAndKey(clientRepo))
 }
 
-class TokenFindingByClientIdAndKey() extends Actor with ActorLogging with CommonBehaviorResolver {
+class TokenFindingByClientIdAndKey(clientRepo: ClientsRepository) extends Actor with ActorLogging with CommonBehaviorResolver {
   import akka.pattern.pipe
   import context.dispatcher
+
   override def receive: Receive = {
-    case FindTokenRelateClientCommand(clientId, clientSecret) =>
+    case FindTokenRelateClientReq(clientId, clientSecret) =>
       context become resolveFindingClientById(sender)
-      ClientDatabase.ClientModel.getByClientIdAndKey(UUID.fromString(clientId), UUID.fromString(clientSecret)) pipeTo self
+      clientRepo.findByClientIdAndClientSecret(clientId, clientSecret) pipeTo self
   }
 }
